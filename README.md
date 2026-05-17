@@ -53,6 +53,23 @@ feyagate-skill/
 
 ## Installation
 
+### Option 0: Install via AI Assistant (Easiest)
+
+Just send the message below to your AI assistant — it will read the guide and install FeyaGate Skill for you automatically.
+
+> **Supported:** Claude Code, Cursor, OpenClaw, Hermes, Windsurf, Copilot, and other AI coding agents.
+
+**Copy and paste this prompt:**
+
+```
+Please read https://github.com/toddpan/feyagate-skill/blob/main/QUICKSTART.md and follow the instructions to install and set up FeyaGate Skill on my machine.
+```
+
+The AI assistant will automatically:
+1. Detect your OS and architecture
+2. Run the one-click install script
+3. Configure and start the service
+
 ### Option 1: One-Click Online Install (Recommended)
 
 Automatically fetches the latest version from the server — download, extract, and configure in one step:
@@ -296,6 +313,23 @@ feyagate-skill/
 | Windows x64 | `miloco-mcp-server-*-Windows-x86_64.zip` | `bin/miloco-mcp-server.exe` | `lib/*.dll` |
 
 ## 安装
+
+### 方式零：让 AI 助手帮你安装（最简单）
+
+直接把下面的消息发给你的 AI 助手，它会自动阅读安装指南并为你完成安装。
+
+> **支持：** Claude Code、Cursor、OpenClaw、Hermes、Windsurf、Copilot 等各类 AI 编程助手。
+
+**复制以下提示词发送：**
+
+```
+请阅读 https://github.com/toddpan/feyagate-skill/blob/main/QUICKSTART.md 并按照指南在我的机器上安装和配置 FeyaGate Skill。
+```
+
+AI 助手会自动：
+1. 检测你的操作系统和架构
+2. 执行一键安装脚本
+3. 完成配置并启动服务
 
 ### 方式一：一键在线安装（推荐）
 
