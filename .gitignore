@@ -1,0 +1,42 @@
+# ── Runtime binaries (populated by setup.sh / setup.bat) ──
+bin/*
+!bin/.gitkeep
+# bin/lib symlink created by setup.sh for @executable_path rpath resolution
+
+# ── Runtime libraries (populated by setup.sh / setup.bat) ──
+lib/*
+!lib/.gitkeep
+
+# ── Runtime data (PID, logs, snapshots, tokens) ──
+data/*
+!data/.gitkeep
+
+# ── Downloaded release packages ──
+packages/*
+!packages/.gitkeep
+
+# ── User-specific config (only example is tracked) ──
+config/config.yaml
+config/*_token.json
+config/data/
+
+# ── WebUI (extracted from release package) ──
+webui/
+
+# ── Auth tokens (secrets) ──
+auth_token.json
+*.token
+
+# ── OS files ──
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ── IDE ──
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+__pycache__/
+*.pyc
