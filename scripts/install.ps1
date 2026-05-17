@@ -1,6 +1,6 @@
 # FeyaGate Skill — 一键在线安装脚本 (Windows PowerShell)
-# 用法: iwr -useb https://gitee.com/panzuji/feyagate-skill/raw/main/scripts/install.ps1 | iex
-#   或: $env:FEYAGATE_INSTALL_DIR="D:\feyagate-skill"; iwr -useb https://gitee.com/panzuji/feyagate-skill/raw/main/scripts/install.ps1 | iex
+# 用法: iwr -useb https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.ps1 | iex
+#   或: $env:FEYAGATE_INSTALL_DIR="D:\feyagate-skill"; iwr -useb https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.ps1 | iex
 #
 # 自动检测架构，从 fota.json 获取最新版本并安装。
 
@@ -12,7 +12,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 $FOTA_URL = "https://oneapi.sooncore.com/ota/fota.json"
-$REPO_URL = "https://gitee.com/panzuji/feyagate-skill.git"
+$REPO_URL = "https://github.com/toddpan/feyagate-skill.git"
 $FOTA_TYPE = "feyagate-skill-win"
 
 if ($Dir) {
@@ -49,7 +49,7 @@ if ($Help) {
 FeyaGate Skill — 一键在线安装 (Windows)
 
 用法:
-  iwr -useb https://gitee.com/panzuji/feyagate-skill/raw/main/scripts/install.ps1 | iex
+  iwr -useb https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.ps1 | iex
   powershell -ExecutionPolicy Bypass -File install.ps1 [-Dir <PATH>]
 
 参数:

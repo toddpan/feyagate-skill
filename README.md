@@ -1,5 +1,255 @@
 # FeyaGate Skill
 
+[中文](#中文) | [English](#english)
+
+---
+
+<a id="english"></a>
+
+MCP Skill wrapper based on [miloco-mcp-server](https://gitee.com/panjyang/miloco-mcp-server), providing smart home device control for Xiaomi/Mi Home, camera monitoring, Xiao AI speaker control, and more.
+
+**Website:** [www.feyagate.com](https://www.feyagate.com)
+
+## Project Structure
+
+```
+feyagate-skill/
+├── SKILL.md                    # AI Agent Skill definition (MCP tool descriptions)
+├── README.md                   # Project README (this file)
+├── QUICKSTART.md               # Quick start guide
+├── reference.md                # Full MCP API reference
+│
+├── config/                     # Config templates (version-controlled)
+│   ├── config.yaml.example     # Config example
+│   └── camera_extra_info.yaml  # Camera extra info
+│
+├── scripts/                    # Management scripts (version-controlled)
+│   ├── install.sh / install.ps1  # One-click online installation
+│   ├── upgrade.sh / upgrade.ps1  # Online upgrade (version compare, backup & rollback)
+│   ├── setup.sh / setup.bat    # Auto-detect platform & extract release package
+│   ├── verify.sh / verify.bat  # Verify installation integrity
+│   ├── start.sh / start.bat    # Start service
+│   ├── stop.sh / stop.bat      # Stop service
+│   ├── health_check.sh / .bat  # Health check
+│   ├── auth.py                 # Mi Home OAuth authorization (cross-platform)
+│   ├── snapshot.py             # Camera snapshot tool
+│   └── scheduled_analysis.py   # Scheduled AI analysis
+│
+├── packages/                   # Downloaded release packages (gitignored)
+├── bin/                        # Binary files (auto-filled by setup, gitignored)
+├── lib/                        # Dynamic libraries (auto-filled by setup, gitignored)
+├── data/                       # Runtime data (gitignored)
+└── webui/                      # Web UI (auto-extracted by setup, gitignored)
+```
+
+## Platform Support
+
+| Platform | Release Package | Binary | Libraries |
+|----------|----------------|--------|-----------|
+| macOS Intel | `miloco-mcp-server-*-Darwin-x86_64.tar.gz` | `bin/miloco-mcp-server` | `lib/*.dylib` |
+| macOS ARM | `miloco-mcp-server-*-Darwin-arm64.tar.gz` | `bin/miloco-mcp-server` | `lib/*.dylib` |
+| Linux x86_64 | `miloco-mcp-server-*-Linux-x86_64.tar.gz` | `bin/miloco-mcp-server` | `lib/*.so` |
+| Windows x64 | `miloco-mcp-server-*-Windows-x86_64.zip` | `bin/miloco-mcp-server.exe` | `lib/*.dll` |
+
+## Installation
+
+### Option 1: One-Click Online Install (Recommended)
+
+Automatically fetches the latest version from the server — download, extract, and configure in one step:
+
+**macOS / Linux:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.sh | bash
+```
+
+**Windows (PowerShell):**
+
+```powershell
+iwr -useb https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.ps1 | iex
+```
+
+Custom install directory:
+
+```bash
+# macOS / Linux
+curl -fsSL https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.sh | bash -s -- --dir ~/my-skill
+
+# Windows
+$env:FEYAGATE_INSTALL_DIR="D:\my-skill"; iwr -useb https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.ps1 | iex
+```
+
+The install script automatically:
+1. Fetches the latest version info from [fota.json](https://oneapi.sooncore.com/ota/fota.json)
+2. Clones the feyagate-skill repository (with scripts and config templates)
+3. Downloads the binary release package for your platform and verifies MD5
+4. Extracts the binary to `bin/`, libraries to `lib/`, WebUI to `webui/`
+5. Creates the default `config/config.yaml` and `data/` directory
+
+### Option 2: Manual Installation
+
+#### Step 1: Clone the Repository
+
+```bash
+git clone https://github.com/toddpan/feyagate-skill.git
+cd feyagate-skill
+```
+
+#### Step 2: Download the Release Package
+
+**Download from website:** Visit [www.feyagate.com](https://www.feyagate.com) to download the Skill package for your platform, then place it in the `packages/` directory.
+
+**Direct download links:**
+
+```bash
+# macOS Intel
+curl -L -o packages/miloco-mcp-server-VERSION-Darwin-x86_64.tar.gz \
+  "https://oneapi.sooncore.com/ota/feyagate-skill/miloco-mcp-server-VERSION-Darwin-x86_64.tar.gz"
+
+# Linux x86_64
+curl -L -o packages/miloco-mcp-server-VERSION-Linux-x86_64.tar.gz \
+  "https://oneapi.sooncore.com/ota/feyagate-skill/miloco-mcp-server-VERSION-Linux-x86_64.tar.gz"
+
+# Windows x64
+curl -L -o packages/miloco-mcp-server-VERSION-Windows-x86_64.zip \
+  "https://oneapi.sooncore.com/ota/feyagate-skill/miloco-mcp-server-VERSION-Windows-x86_64.zip"
+```
+
+> Tip: Get the latest version info at https://oneapi.sooncore.com/ota/fota.json (search for `feyagate-skill-*` entries).
+
+#### Step 3: Run Setup
+
+```bash
+# macOS / Linux
+bash scripts/setup.sh
+
+# Windows
+scripts\setup.bat
+
+# Or specify a package path
+bash scripts/setup.sh --package /path/to/miloco-mcp-server-*.tar.gz
+```
+
+#### Step 4: Configuration
+
+Edit `config/config.yaml` to set cloud region and other parameters:
+
+```yaml
+server:
+  http_port: 38080
+  bind_address: "0.0.0.0"
+auth:
+  cloud_server: "cn"      # cn / de / sg / us / ru / i2
+```
+
+### Start & Authorize
+
+```bash
+bash scripts/start.sh                # Start MCP Server
+python3 scripts/auth.py              # First-time Mi Home account authorization
+bash scripts/health_check.sh         # Verify status
+```
+
+## Service Management
+
+| Action | macOS / Linux | Windows |
+|--------|---------------|---------|
+| Install/Extract | `bash scripts/setup.sh` | `scripts\setup.bat` |
+| Verify Installation | `bash scripts/verify.sh` | `scripts\verify.bat` |
+| Start | `bash scripts/start.sh` | `scripts\start.bat` |
+| Stop | `bash scripts/stop.sh` | `scripts\stop.bat` |
+| Health Check | `bash scripts/health_check.sh` | `scripts\health_check.bat` |
+| Custom Port | `bash scripts/start.sh --port 9090` | `scripts\start.bat --port 9090` |
+| Online Upgrade | `bash scripts/upgrade.sh` | `powershell -File scripts\upgrade.ps1` |
+| Check for Updates | `bash scripts/upgrade.sh --check` | `powershell -File scripts\upgrade.ps1 -Check` |
+
+## MCP Tool Overview
+
+| Category | Tools | Description |
+|----------|-------|-------------|
+| **Device Discovery** | device/list, device/specs, platform/status, gateway/info | Cross-platform device management & status query |
+| **Xiaomi Control** | xiaomi/get_properties, xiaomi/set_property, xiaomi/execute_action | MIOT protocol device read/write & actions |
+| **Xiaomi Auth** | xiaomi/auth_status, xiaomi/auth_url, xiaomi/auth_callback | OAuth authorization management |
+| **Scenes** | scene/list, scene/trigger | Cross-platform scene management |
+| **Xiao AI Speaker** | xiaoai/tts, xiaoai/play_music, xiaoai/control | TTS, music, voice control |
+| **Camera** | xiaomi/camera_list, xiaomi/camera_connect, xiaomi/camera_snapshot, etc. | P2P connection, JPEG capture |
+| **Tuya** | tuya/get_properties, tuya/set_property | Tuya device control |
+| **Midea** | midea/get_properties, midea/set_property, midea/execute_action | Midea device control |
+| **eWeLink** | ewelink/get_properties, ewelink/set_property, ewelink/execute_action | eWeLink device control |
+| **Rooms** | room/list, room/set_device | Room management |
+| **Memory** | memory/read, memory/add, memory/search, memory/note, etc. | Long-term memory & daily notes |
+| **Scheduling** | schedule/add, schedule/list, schedule/get, etc. | Scheduled tasks |
+| **Serial/GPIO** | serial/*, gpio/* | Extended device control |
+
+For detailed API documentation, see [SKILL.md](SKILL.md), [FeyaGate_MCP_API.md](FeyaGate_MCP_API.md), and [FeyaGate_HTTP_API.md](FeyaGate_HTTP_API.md).
+
+## Upgrade
+
+### Online Upgrade (Recommended)
+
+Automatically fetches the latest version with version comparison, backup/rollback, and service lifecycle management:
+
+**Check for new versions:**
+
+```bash
+# macOS / Linux
+bash scripts/upgrade.sh --check
+
+# Windows
+powershell -ExecutionPolicy Bypass -File scripts\upgrade.ps1 -Check
+```
+
+**Perform upgrade:**
+
+```bash
+# macOS / Linux (interactive confirmation)
+bash scripts/upgrade.sh
+
+# macOS / Linux (non-interactive, for automation)
+bash scripts/upgrade.sh --yes
+
+# Windows (interactive confirmation)
+powershell -ExecutionPolicy Bypass -File scripts\upgrade.ps1
+
+# Windows (non-interactive)
+powershell -ExecutionPolicy Bypass -File scripts\upgrade.ps1 -Yes
+```
+
+Upgrade flow: stop service -> backup bin/ + lib/ -> download new version -> MD5 verify -> extract & install -> write version -> restart service -> health check. If any step fails, it automatically rolls back to the backup.
+
+### Manual Upgrade
+
+When online upgrade is unavailable:
+
+```bash
+bash scripts/stop.sh                                          # Stop current service
+cp ~/Downloads/miloco-mcp-server-NEW-VERSION.tar.gz packages/  # Place new package
+bash scripts/setup.sh                                          # Re-extract (overwrite bin/ lib/)
+bash scripts/start.sh                                          # Start new version
+```
+
+## Developer: Building Release Packages
+
+If you need to compile and package from source:
+
+```bash
+# In the miloco-mcp-server project
+cd miloco-mcp-server
+bash build-desktop-mac.sh --build --server-only   # macOS
+# or
+bash build-desktop-linux.sh --build --server-only  # Linux
+
+# Output: app/release/miloco-mcp-server-VERSION-OS-ARCH.tar.gz
+```
+
+## License
+
+MIT License
+
+---
+
+<a id="中文"></a>
+
 基于 [miloco-mcp-server](https://gitee.com/panjyang/miloco-mcp-server) 的 MCP Skill 封装，提供小米/米家智能设备控制、摄像头监控、小爱音箱控制等能力。
 
 **官网：** [www.feyagate.com](https://www.feyagate.com)
@@ -54,23 +304,23 @@ feyagate-skill/
 **macOS / Linux:**
 
 ```bash
-curl -fsSL https://gitee.com/panzuji/feyagate-skill/raw/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.sh | bash
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-iwr -useb https://gitee.com/panzuji/feyagate-skill/raw/main/scripts/install.ps1 | iex
+iwr -useb https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.ps1 | iex
 ```
 
 自定义安装目录：
 
 ```bash
 # macOS / Linux
-curl -fsSL https://gitee.com/panzuji/feyagate-skill/raw/main/scripts/install.sh | bash -s -- --dir ~/my-skill
+curl -fsSL https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.sh | bash -s -- --dir ~/my-skill
 
 # Windows
-$env:FEYAGATE_INSTALL_DIR="D:\my-skill"; iwr -useb https://gitee.com/panzuji/feyagate-skill/raw/main/scripts/install.ps1 | iex
+$env:FEYAGATE_INSTALL_DIR="D:\my-skill"; iwr -useb https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.ps1 | iex
 ```
 
 安装脚本会自动：
@@ -85,7 +335,7 @@ $env:FEYAGATE_INSTALL_DIR="D:\my-skill"; iwr -useb https://gitee.com/panzuji/fey
 #### Step 1: 克隆仓库
 
 ```bash
-git clone https://gitee.com/panzuji/feyagate-skill.git
+git clone https://github.com/toddpan/feyagate-skill.git
 cd feyagate-skill
 ```
 
@@ -209,7 +459,7 @@ powershell -ExecutionPolicy Bypass -File scripts\upgrade.ps1
 powershell -ExecutionPolicy Bypass -File scripts\upgrade.ps1 -Yes
 ```
 
-升级流程：停止服务 → 备份 bin/ + lib/ → 下载新版本 → MD5 校验 → 解压安装 → 写入版本号 → 重启服务 → 健康检查。任何步骤失败将自动回滚到备份版本。
+升级流程：停止服务 -> 备份 bin/ + lib/ -> 下载新版本 -> MD5 校验 -> 解压安装 -> 写入版本号 -> 重启服务 -> 健康检查。任何步骤失败将自动回滚到备份版本。
 
 ### 手动升级
 

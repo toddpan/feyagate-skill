@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # FeyaGate Skill — 一键在线安装脚本
-# 用法: curl -fsSL https://gitee.com/panzuji/feyagate-skill/raw/main/scripts/install.sh | bash
-#   或: curl -fsSL https://gitee.com/panzuji/feyagate-skill/raw/main/scripts/install.sh | bash -s -- --dir ~/my-skill
+# 用法: curl -fsSL https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.sh | bash
+#   或: curl -fsSL https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.sh | bash -s -- --dir ~/my-skill
 #
 # 自动检测平台/架构，从 fota.json 获取最新版本并安装。
 set -euo pipefail
 
 FOTA_URL="https://oneapi.sooncore.com/ota/fota.json"
 INSTALL_DIR="${FEYAGATE_INSTALL_DIR:-$HOME/feyagate-skill}"
-REPO_URL="https://gitee.com/panzuji/feyagate-skill.git"
+REPO_URL="https://github.com/toddpan/feyagate-skill.git"
 VERBOSE=0
 
 # ── Colors ────────────────────────────────────────────────────────────────────
@@ -31,8 +31,8 @@ while [[ $# -gt 0 ]]; do
 FeyaGate Skill — 一键在线安装
 
 用法:
-  curl -fsSL https://gitee.com/panzuji/feyagate-skill/raw/main/scripts/install.sh | bash
-  curl -fsSL https://gitee.com/panzuji/feyagate-skill/raw/main/scripts/install.sh | bash -s -- [选项]
+  curl -fsSL https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.sh | bash
+  curl -fsSL https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.sh | bash -s -- [选项]
 
 选项:
   --dir <PATH>    安装目录 (默认: ~/feyagate-skill)
@@ -56,7 +56,7 @@ detect_platform() {
         Linux)  os="linux"; os_label="Linux"   ;;
         MINGW*|MSYS*|CYGWIN*)
             error "Windows 请使用 PowerShell 安装:"
-            error "  iwr -useb https://gitee.com/panzuji/feyagate-skill/raw/main/scripts/install.ps1 | iex"
+            error "  iwr -useb https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.ps1 | iex"
             exit 1 ;;
         *) error "不支持的操作系统: $(uname -s)"; exit 1 ;;
     esac

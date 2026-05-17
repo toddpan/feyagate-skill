@@ -7,19 +7,19 @@
 **macOS / Linux:**
 
 ```bash
-curl -fsSL https://gitee.com/panzuji/feyagate-skill/raw/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.sh | bash
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-iwr -useb https://gitee.com/panzuji/feyagate-skill/raw/main/scripts/install.ps1 | iex
+iwr -useb https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.ps1 | iex
 ```
 
 默认安装到 `~/feyagate-skill`，自定义目录：
 
 ```bash
-curl -fsSL https://gitee.com/panzuji/feyagate-skill/raw/main/scripts/install.sh | bash -s -- --dir ~/my-skill
+curl -fsSL https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.sh | bash -s -- --dir ~/my-skill
 ```
 
 ## 手动安装
@@ -27,7 +27,7 @@ curl -fsSL https://gitee.com/panzuji/feyagate-skill/raw/main/scripts/install.sh 
 ### macOS / Linux
 
 ```bash
-git clone https://gitee.com/panzuji/feyagate-skill.git
+git clone https://github.com/toddpan/feyagate-skill.git
 cd feyagate-skill
 
 # 下载发布包（Linux x86_64 为例，请替换为最新版本号）
@@ -42,7 +42,7 @@ bash scripts/setup.sh
 ### Windows
 
 ```cmd
-git clone https://gitee.com/panzuji/feyagate-skill.git
+git clone https://github.com/toddpan/feyagate-skill.git
 cd feyagate-skill
 
 :: 将下载的 .zip 放入 packages\ 目录
