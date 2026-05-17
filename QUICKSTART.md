@@ -221,12 +221,12 @@ curl -s -X POST http://localhost:38080/mcp/http \
   | python3 -m json.tool
 ```
 
-### Check Platform Status
+### Check Gateway Status
 
 ```bash
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"platform/status","arguments":{}}}' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"gateway/info","arguments":{}}}' \
   | python3 -m json.tool
 ```
 
@@ -275,28 +275,28 @@ curl -s -X POST http://localhost:38080/mcp/http \
 # Read properties (requires device_id, siid, piids)
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"xiaomi/get_properties","arguments":{"device_id":"YOUR_DID","siid":2,"piids":[1]}}}' \
+  -d '{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"get_xiaomi_device_properties","arguments":{"device_id":"YOUR_DID","siid":2,"piids":[1]}}}' \
   | python3 -m json.tool
 
 # Set property (e.g. turn on light — siid:2 is light service, piid:1 is power switch)
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":15,"method":"tools/call","params":{"name":"xiaomi/set_property","arguments":{"device_id":"YOUR_DID","siid":"2","piid":"1","value":true}}}' \
+  -d '{"jsonrpc":"2.0","id":15,"method":"tools/call","params":{"name":"set_xiaomi_device_property","arguments":{"device_id":"YOUR_DID","siid":"2","piid":"1","value":true}}}' \
   | python3 -m json.tool
 
 # Execute action (e.g. toggle switch)
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":16,"method":"tools/call","params":{"name":"xiaomi/execute_action","arguments":{"device_id":"YOUR_DID","siid":"2","aiid":"1"}}}' \
+  -d '{"jsonrpc":"2.0","id":16,"method":"tools/call","params":{"name":"execute_xiaomi_device_action","arguments":{"device_id":"YOUR_DID","siid":"2","aiid":"1"}}}' \
   | python3 -m json.tool
 ```
 
 **Control flow:**
 1. `device/list` — search by keyword/platform to find the target device
 2. `device/specs` — query the device's `siid` (service ID), `piid` (property ID), `aiid` (action ID)
-3. `xiaomi/get_properties` — read current property values (params: `device_id`, `siid`, `piids` array)
-4. `xiaomi/set_property` — set property value (params: `device_id`, `siid`, `piid`, `value`)
-5. `xiaomi/execute_action` — execute device action (params: `device_id`, `siid`, `aiid`)
+3. `get_xiaomi_device_properties` — read current property values (params: `device_id`, `siid`, `piids` array)
+4. `set_xiaomi_device_property` — set property value (params: `device_id`, `siid`, `piid`, `value`)
+5. `execute_xiaomi_device_action` — execute device action (params: `device_id`, `siid`, `aiid`)
 
 ### Scene Management
 
@@ -304,13 +304,13 @@ curl -s -X POST http://localhost:38080/mcp/http \
 # List scenes (requires platform)
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":17,"method":"tools/call","params":{"name":"scene/list","arguments":{"platform":"xiaomi"}}}' \
+  -d '{"jsonrpc":"2.0","id":17,"method":"tools/call","params":{"name":"xiaomi/scene_list","arguments":{"platform":"xiaomi"}}}' \
   | python3 -m json.tool
 
 # Trigger scene (requires platform and sceneId)
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":18,"method":"tools/call","params":{"name":"scene/trigger","arguments":{"platform":"xiaomi","sceneId":"SCENE_ID"}}}' \
+  -d '{"jsonrpc":"2.0","id":18,"method":"tools/call","params":{"name":"xiaomi/scene_trigger","arguments":{"platform":"xiaomi","sceneId":"SCENE_ID"}}}' \
   | python3 -m json.tool
 ```
 
@@ -443,7 +443,7 @@ The upgrade automatically: stops service -> backs up -> downloads new version ->
 | `cannot open shared object file` | Install system deps: `sudo apt-get install -y libfmt8 libmosquitto1 libyaml-cpp0.7` |
 | `Tool not found` | Check tool name, use `tools/list` to see all available tools |
 | `key 'device_id' not found` | `device/specs` uses `deviceId` (camelCase); platform tools use `device_id` (snake_case) |
-| `key 'siid' not found` | Use `xiaomi/get_properties` etc. and pass `siid`/`piids` parameters |
+| `key 'siid' not found` | Use `get_xiaomi_device_properties` etc. and pass `siid`/`piids` parameters |
 | `camera_connect` fails | Check if camera native libraries exist in `lib/` |
 | No frame data | Wait 3-5 seconds, check `xiaomi/camera_status` |
 | Library load failure | Run `ldd bin/miloco-mcp-server \| grep "not found"` to check missing libs |
