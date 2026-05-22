@@ -32,6 +32,11 @@ auth_token.json
 Thumbs.db
 Desktop.ini
 
+# ── Build artifacts ──
+dist/
+*.egg-info/
+*.egg
+
 # ── IDE ──
 .idea/
 .vscode/
