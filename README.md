@@ -1,14 +1,35 @@
-# FeyaGate Skill
+# FeyaGate Skill — MCP Smart Home Gateway for AI Agents
 
 [中文](#中文) | [English](#english)
+
+**MCP Server** | **Smart Home** | **IoT Gateway** | **AI Agent Skill**
+
+[![MCP](https://img.shields.io/badge/Protocol-MCP-blue)](https://modelcontextprotocol.io)
+[![Platforms](https://img.shields.io/badge/AI_Agents-OpenClaw%20%7C%20Claude%20Code%20%7C%20Hermes%20%7C%20Codex%20%7C%20Windsurf-green)](#)
+[![Devices](https://img.shields.io/badge/Devices-Xiaomi%20%7C%20Tuya%20%7C%20Midea%20%7C%20eWeLink-orange)](#)
 
 ---
 
 <a id="english"></a>
 
-MCP Skill wrapper based on [miloco-mcp-server](https://gitee.com/panjyang/miloco-mcp-server), providing smart home device control for Xiaomi/Mi Home, camera monitoring, Xiao AI speaker control, and more.
+FeyaGate (飞阳网关) is an **MCP (Model Context Protocol) smart home gateway skill** that enables AI agents — **OpenClaw, Claude Code, Hermes, Codex, Windsurf, Copilot, 小智AI** and other AI coding assistants — to directly control smart home devices through a unified MCP interface.
+
+Based on [miloco-mcp-server](https://gitee.com/panjyang/miloco-mcp-server), it provides cross-platform device control for **Xiaomi/Mi Home, Tuya, Midea, eWeLink**, camera monitoring with P2P streaming, Xiao AI speaker control, scheduled automation, and persistent memory — all accessible as MCP tools for any compatible AI agent.
 
 **Website:** [www.feyagate.com](https://www.feyagate.com)
+
+### Supported AI Agents
+
+| AI Agent | Status | Integration |
+|----------|--------|-------------|
+| **OpenClaw** | Supported | MCP Skill auto-install |
+| **Claude Code** | Supported | MCP config auto-setup |
+| **Hermes** | Supported | MCP Skill auto-install |
+| **Codex** | Supported | MCP Skill auto-install |
+| **Windsurf** | Supported | MCP config auto-setup |
+| **Copilot** | Supported | MCP config auto-setup |
+| **小智AI (Xiaozhi AI)** | Supported | MCP Skill auto-install |
+| **Cursor** | Supported | MCP config auto-setup |
 
 ## Project Structure
 
@@ -57,7 +78,7 @@ feyagate-skill/
 
 Just send the message below to your AI assistant — it will read the guide and install FeyaGate Skill for you automatically.
 
-> **Supported:** Claude Code, Cursor, OpenClaw, Hermes, Windsurf, Copilot, and other AI coding agents.
+> **Supported AI Agents:** OpenClaw, Claude Code, Hermes, Codex, Windsurf, Copilot, 小智AI, Cursor, and other MCP-compatible AI coding agents.
 
 **Copy and paste this prompt:**
 
@@ -271,6 +292,19 @@ MIT License
 
 **官网：** [www.feyagate.com](https://www.feyagate.com)
 
+### 支持的 AI 助手
+
+| AI 助手 | 状态 | 集成方式 |
+|---------|------|----------|
+| **OpenClaw** | 已支持 | MCP Skill 自动安装 |
+| **Claude Code** | 已支持 | MCP 配置自动生成 |
+| **Hermes** | 已支持 | MCP Skill 自动安装 |
+| **Codex** | 已支持 | MCP Skill 自动安装 |
+| **Windsurf** | 已支持 | MCP 配置自动生成 |
+| **Copilot** | 已支持 | MCP 配置自动生成 |
+| **小智AI** | 已支持 | MCP Skill 自动安装 |
+| **Cursor** | 已支持 | MCP 配置自动生成 |
+
 ## 项目结构
 
 ```
@@ -318,7 +352,7 @@ feyagate-skill/
 
 直接把下面的消息发给你的 AI 助手，它会自动阅读安装指南并为你完成安装。
 
-> **支持：** Claude Code、Cursor、OpenClaw、Hermes、Windsurf、Copilot 等各类 AI 编程助手。
+> **支持：** OpenClaw、Claude Code、Hermes、Codex、Windsurf、Copilot、小智AI、Cursor 等各类 MCP 兼容 AI 编程助手。
 
 **复制以下提示词发送：**
 

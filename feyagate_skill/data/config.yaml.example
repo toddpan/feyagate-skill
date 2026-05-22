@@ -1,0 +1,17 @@
+server:
+  ws_port: 8765
+  http_port: 38080
+  bind_address: "0.0.0.0"
+  webui_dir: "webui"          # path to WebUI static files (empty = disabled)
+
+auth:
+  cloud_server: "cn"          # cn / de / sg / us / ru / i2
+  token_file: "data/auth_token.json"
+
+camera:
+  frame_interval: 500         # ms between JPEG captures
+  buffer_max_size: 20         # max frames per camera/channel
+  buffer_ttl: 300             # seconds before frames expire
+  reconnect_min: 3            # seconds, initial reconnect delay
+  reconnect_max: 1200         # seconds, max reconnect delay
+  jpeg_quality: 90            # JPEG encode quality (1-100)

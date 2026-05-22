@@ -1,6 +1,6 @@
 # FeyaGate Skill — Quick Start Guide
 
-> **For AI Assistants:** Read this document and follow the steps below to install and set up FeyaGate Skill on the user's machine. Execute commands sequentially, and report progress to the user at each step.
+> **For AI Assistants (OpenClaw, Claude Code, Hermes, Codex, Windsurf, Copilot, 小智AI, Cursor):** Read this document and follow the steps below to install and set up FeyaGate Skill on the user's machine. Execute commands sequentially, and report progress to the user at each step.
 
 ## Step 1: Install
 
