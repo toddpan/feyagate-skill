@@ -36,7 +36,36 @@ MCP-based multi-platform smart home gateway supporting Xiaomi, Tuya, Midea, eWeL
 
 > **Note:** The PC proxy (miloco-mcp-server) provides all gateway MCP tools plus additional extensions (camera P2P, Xiaomi auth, etc.).
 
-## Server Lifecycle
+## Quick Start
+
+```bash
+pip install feyagate-skill       # Step 1: Install Python package
+feyagate setup                   # Step 2: Download MCP server binary (~30MB)
+feyagate start                   # Step 3: Start service (localhost:38080)
+feyagate install-claude          # Step 4: Register with your AI agent
+feyagate auth                    # Step 5: Authorize smart home platform
+```
+
+> **Linux** may need system deps first: `sudo apt-get install -y libfmt8 libmosquitto1 libyaml-cpp0.7`
+
+Other agent install commands: `install-cursor`, `install-openclaw`, `install-hermes`, `install-codex`, `install-windsurf`, `install-copilot`
+
+Full step-by-step guide: [QUICKSTART.md](QUICKSTART.md)
+
+## Server Lifecycle (CLI)
+
+| Action | Command |
+|--------|---------|
+| Install binary | `feyagate setup [--dir PATH]` |
+| Start | `feyagate start [--port PORT]` |
+| Stop | `feyagate stop` |
+| Restart | `feyagate restart [--port PORT]` |
+| Status | `feyagate status` |
+| Logs | `feyagate log [-n 50]` |
+| Upgrade | `feyagate upgrade` |
+| Auth Xiaomi | `feyagate auth [--status] [--code CODE]` |
+
+### Manual Scripts (Advanced)
 
 | Action | macOS/Linux | Windows |
 |--------|-------------|---------|
@@ -49,13 +78,6 @@ MCP-based multi-platform smart home gateway supporting Xiaomi, Tuya, Midea, eWeL
 | Custom port | `bash scripts/start.sh --port 9090` | `scripts\start.bat --port 9090` |
 | Upgrade | `bash scripts/upgrade.sh` | `powershell -File scripts\upgrade.ps1` |
 | Check updates | `bash scripts/upgrade.sh --check` | `powershell -File scripts\upgrade.ps1 -Check` |
-
-### System Dependencies (Linux)
-
-```bash
-sudo apt-get install -y libfmt8 libmosquitto1 libyaml-cpp0.7
-ldd bin/miloco-mcp-server | grep "not found"  # verify
-```
 
 ## Cross-Platform Tools
 
@@ -128,12 +150,14 @@ xiaozhi:
 
 | Symptom | Fix |
 |---------|-----|
-| `connection refused` | Start server: `bash scripts/start.sh` |
-| `authorized: false` | Authorize via `xiaomi/auth_url` → `xiaomi/auth_callback` |
-| `cannot open shared object file` | `sudo apt-get install -y libfmt8 libmosquitto1 libyaml-cpp0.7` |
+| `command not found: feyagate` | `pip install feyagate-skill` |
+| `FeyaGate not installed` | `feyagate setup` |
+| `connection refused` | `feyagate start` |
+| `authorized: false` | `feyagate auth` (Xiaomi) or use platform-specific auth tool |
+| `cannot open shared object file` | `sudo apt-get install -y libfmt8 libmosquitto1 libyaml-cpp0.7` (Linux) |
 | `Tool not found` | Check tool name (see `tools/list` output) |
 | `key 'device_id' not found` | Platform tools use `device_id`; cross-platform `device/specs` uses `deviceId` |
 | `license_required` error | Set license key via `license/set` tool |
-| Library load error | `ldd bin/miloco-mcp-server \| grep "not found"` |
+| Library load error | `ldd ~/.feyagate/bin/miloco-mcp-server \| grep "not found"` |
 
 Full API reference: [FeyaGate_MCP_API.md](FeyaGate_MCP_API.md), [FeyaGate_HTTP_API.md](FeyaGate_HTTP_API.md)

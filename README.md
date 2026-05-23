@@ -24,13 +24,13 @@
 - **Memory system** — persistent notes and long-term memory for AI agents
 - **8 AI agents supported** — Claude Code, Cursor, OpenClaw, Hermes, Codex, Windsurf, Copilot, 小智AI
 
-## Install — 3 Steps
+## Install — 4 Steps
 
 ```
-pip install feyagate-skill    →    feyagate setup    →    feyagate start
+pip install feyagate-skill  →  feyagate setup  →  feyagate start  →  feyagate install-<agent>
 ```
 
-That's it. Then authorize your smart home account:
+Then authorize your smart home account:
 
 ```bash
 feyagate auth                 # Xiaomi OAuth (interactive)
@@ -40,7 +40,7 @@ feyagate auth                 # Xiaomi OAuth (interactive)
 
 ## Connect to Your AI Agent
 
-One command per agent. Restart the agent after install.
+One command per agent. Run this **before** authorizing platforms. Restart the agent after install.
 
 | Agent | Command |
 |:------|:--------|
@@ -125,13 +125,13 @@ MIT License
 - **记忆系统** — 持久化笔记和长期记忆
 - **支持 8 款 AI 助手** — Claude Code、Cursor、OpenClaw、Hermes、Codex、Windsurf、Copilot、小智AI
 
-## 安装 — 3 步
+## 安装 — 4 步
 
 ```
-pip install feyagate-skill    →    feyagate setup    →    feyagate start
+pip install feyagate-skill  →  feyagate setup  →  feyagate start  →  feyagate install-<agent>
 ```
 
-搞定。然后授权你的智能家居账号：
+然后授权你的智能家居账号：
 
 ```bash
 feyagate auth                 # 小米 OAuth 授权（交互式）
@@ -141,7 +141,7 @@ feyagate auth                 # 小米 OAuth 授权（交互式）
 
 ## 接入 AI 助手
 
-一条命令搞定，装完重启 AI 助手即可。
+一条命令搞定，**在授权平台之前**运行。装完重启 AI 助手即可。
 
 | AI 助手 | 命令 |
 |:--------|:-----|

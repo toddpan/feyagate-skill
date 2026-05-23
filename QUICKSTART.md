@@ -1,207 +1,159 @@
 # FeyaGate Skill — Quick Start Guide
 
-> **For AI Assistants (OpenClaw, Claude Code, Hermes, Codex, Windsurf, Copilot, 小智AI, Cursor):** Read this document and follow the steps below to install and set up FeyaGate Skill on the user's machine. Execute commands sequentially, and report progress to the user at each step.
+> **For AI Assistants (OpenClaw, Claude Code, Hermes, Codex, Windsurf, Copilot, 小智AI, Cursor):**
+> Follow Steps 1-6 sequentially. Report progress at each step. Do NOT skip steps.
+> Steps marked with **[AUTO]** can be executed without asking the user.
+> Steps marked with **[ASK]** require user input before proceeding.
 
-## Step 1: Install
+## Prerequisites
+
+- Python 3.9+
+- Internet access (for downloading MCP server binary ~30MB)
+
+## Step 1: Install [AUTO]
 
 ```bash
 pip install feyagate-skill
 ```
 
-Verify installation:
+Verify:
 
 ```bash
 feyagate --version
 ```
 
-## Step 2: Setup MCP Server
+## Step 2: Setup MCP Server [AUTO]
 
-Download and install the MCP server binary:
+Download and install the MCP server binary (may take 1-2 minutes):
 
 ```bash
 feyagate setup
 ```
 
-Default install directory: `~/.feyagate`. To customize:
+Default directory: `~/.feyagate`. Customize with `feyagate setup --dir ~/my-feyagate`.
 
-```bash
-feyagate setup --dir ~/my-feyagate
-```
+## Step 3: Install System Dependencies (Linux only) [AUTO]
 
-## Step 3: Install System Dependencies (Linux only)
-
-The MCP server requires system-level shared libraries. On Linux, install them before starting the service:
-
-**Ubuntu / Debian:**
+> Skip this step on macOS / Windows.
 
 ```bash
 sudo apt-get install -y libfmt8 libmosquitto1 libyaml-cpp0.7
 ```
 
-> If package names are unavailable for your distro version, use `apt-cache search libfmt` etc. to find the correct names. macOS and Windows users generally do not need this step.
-
-Verify all dependencies are met:
+Verify (no output = OK):
 
 ```bash
 ldd ~/.feyagate/bin/miloco-mcp-server | grep "not found"
-# No output means all dependencies are satisfied
 ```
 
-## Step 4: Start the Service
+## Step 4: Start the Service [AUTO]
 
 ```bash
 feyagate start
 ```
 
-The service runs at: `http://localhost:38080/mcp/http`
-
-Custom port:
-
-```bash
-feyagate start --port 9090
-```
-
-Verify it's running:
+Verify:
 
 ```bash
 feyagate status
 ```
 
-## Step 5: Authorize Smart Home Platforms
+Service URL: `http://localhost:38080/mcp/http`. Custom port: `feyagate start --port 9090`.
 
-After the service starts, authorize at least one smart home platform. Choose the platform(s) the user needs.
+## Step 5: Install as AI Agent Skill [ASK]
+
+> **IMPORTANT:** This step registers FeyaGate with the AI agent you are currently running in.
+> Ask the user: "Which AI agent should I install for?" or detect from the environment.
+
+```bash
+feyagate install-claude     # Claude Code
+feyagate install-cursor     # Cursor
+feyagate install-openclaw   # OpenClaw
+feyagate install-hermes     # Hermes Agent
+feyagate install-windsurf   # Windsurf
+feyagate install-copilot    # GitHub Copilot (VS Code)
+feyagate install-codex      # OpenAI Codex CLI
+```
+
+After install, **restart the AI agent** to load the skill.
+
+## Step 6: Authorize Smart Home Platform [ASK]
+
+> Ask the user which platform(s) they want to authorize.
 
 ### Xiaomi / Mi Home (OAuth)
 
 ```bash
-feyagate auth --status    # Check authorization status
-feyagate auth             # Interactive authorization
+feyagate auth --status    # Check current status
+feyagate auth             # Interactive OAuth authorization
 ```
 
-Or use API calls directly:
-
-```bash
-# 1. Get authorization URL
-curl -s -X POST http://localhost:38080/mcp/http \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"xiaomi/auth_url","arguments":{}}}' \
-  | python3 -m json.tool
-
-# 2. Open the returned URL in a browser and log in with the Mi Home account
-# 3. After login, the browser redirects to https://127.0.0.1/?code=... (page may show "cannot access" — that's normal)
-#    Copy the full URL from the browser address bar
-# 4. Submit the authorization code (replace CODE with the actual code value)
-curl -s -X POST http://localhost:38080/mcp/http \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"xiaomi/auth_callback","arguments":{"code":"CODE"}}}' \
-  | python3 -m json.tool
-
-# 5. Verify authorization status
-curl -s -X POST http://localhost:38080/mcp/http \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"xiaomi/auth_status","arguments":{}}}' \
-  | python3 -m json.tool
-```
+The interactive flow will output a URL → user opens in browser → logs in → pastes the callback URL back.
 
 ### Tuya (QR Code Scan)
 
-Requires Tuya Smart or Smart Life App.
-
-1. Get the user code from the app: **Me -> Settings -> Account & Security -> User Code** (e.g. `AxNmcp2`)
-
-2. Generate QR code:
+Requires Tuya Smart or Smart Life app. User Code location: **Me → Settings → Account & Security → User Code**.
 
 ```bash
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"auth/tuya_qr","arguments":{"user_code":"YOUR_USER_CODE"}}}' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"auth/tuya_qr","arguments":{"user_code":"USER_CODE"}}}' \
   | python3 -m json.tool
 ```
 
-3. Convert the returned `qr_url` to a QR code image, scan with the Tuya app and confirm authorization.
-
-4. Check scan status:
-
-```bash
-curl -s -X POST http://localhost:38080/mcp/http \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"auth/tuya_qr_status","arguments":{"token":"QR_TOKEN","user_code":"YOUR_USER_CODE"}}}' \
-  | python3 -m json.tool
-```
-
-5. Refresh device list:
-
-```bash
-curl -s -X POST http://localhost:38080/mcp/http \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"tuya/refresh","arguments":{}}}' \
-  | python3 -m json.tool
-```
+Scan the returned `qr_url` with the Tuya app, then check status with `auth/tuya_qr_status`.
 
 ### Midea (Password Login)
 
 ```bash
-# Login
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"auth/midea_login","arguments":{"account":"YOUR_PHONE","password":"YOUR_PASSWORD"}}}' \
-  | python3 -m json.tool
-```
-
-Parameters:
-- `account`: Meiju App phone number or email
-- `password`: Meiju App password
-- `cloud` (optional): `meiju` (default) or `msmart` (MSmartHome)
-
-Returns `"authenticated": true` on success. Token valid for 7200 seconds (2 hours).
-
-Refresh device list:
-
-```bash
-curl -s -X POST http://localhost:38080/mcp/http \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"midea/refresh","arguments":{}}}' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"auth/midea_login","arguments":{"account":"PHONE_OR_EMAIL","password":"PASSWORD"}}}' \
   | python3 -m json.tool
 ```
 
 ### eWeLink (Password Login)
 
 ```bash
-# Login
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"auth/ewelink_login","arguments":{"email":"YOUR_EMAIL","password":"YOUR_PASSWORD","country_code":"+86"}}}' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"auth/ewelink_login","arguments":{"email":"EMAIL","password":"PASSWORD","country_code":"+86"}}}' \
   | python3 -m json.tool
 ```
 
-Parameters:
-- `email`: eWeLink / Sonoff App email or phone number
-- `password`: App password
-- `country_code` (optional): Country code (e.g. `+86` for China, default)
-
-Returns `"authenticated": true` on success. Token valid for 30 days. WebSocket connects automatically.
-
-Refresh device list:
+### Verify Authorization
 
 ```bash
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ewelink/refresh","arguments":{}}}' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"auth/platforms","arguments":{}}}' \
   | python3 -m json.tool
 ```
 
-### Verify All Platform Authorization
+## Setup Complete
+
+After completing Steps 1-6, the user can control smart home devices through their AI agent.
+The AI agent will automatically use the MCP tools (e.g. `device/list`, `device/specs`, `xiaomi/set_property`).
+
+---
+
+## Service Management
 
 ```bash
-curl -s -X POST http://localhost:38080/mcp/http \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"auth/platforms","arguments":{}}}' \
-  | python3 -m json.tool
+feyagate status      # Check service status
+feyagate log         # View server logs
+feyagate log -n 50   # View last 50 lines of logs
+feyagate stop        # Stop service
+feyagate restart     # Restart service
+feyagate upgrade     # Upgrade MCP server to latest version
 ```
 
-## Step 6: Manage Devices
+## Usage Examples
 
-### List Devices
+> These examples show how to use the MCP tools via curl.
+> When using through an AI agent, the agent calls these tools automatically — no curl needed.
+
+### List & Search Devices
 
 ```bash
 # All devices
@@ -223,208 +175,107 @@ curl -s -X POST http://localhost:38080/mcp/http \
   | python3 -m json.tool
 ```
 
-### Check Gateway Status
+### Control Xiaomi / MIOT Device
+
+**Control flow:** `device/list` → `device/specs` (get siid/piid/aiid) → `xiaomi/set_property` or `xiaomi/execute_action`
+
+> **Parameter naming:** Cross-platform tool `device/specs` uses `deviceId` (camelCase); platform-specific tools use `device_id` (snake_case).
 
 ```bash
+# Query device spec
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"gateway/info","arguments":{}}}' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"device/specs","arguments":{"deviceId":"YOUR_DID"}}}' \
+  | python3 -m json.tool
+
+# Read property
+curl -s -X POST http://localhost:38080/mcp/http \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"xiaomi/get_properties","arguments":{"device_id":"YOUR_DID","siid":2,"piids":[1]}}}' \
+  | python3 -m json.tool
+
+# Set property (turn on light)
+curl -s -X POST http://localhost:38080/mcp/http \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"xiaomi/set_property","arguments":{"device_id":"YOUR_DID","siid":2,"piid":1,"value":true}}}' \
+  | python3 -m json.tool
+
+# Execute action
+curl -s -X POST http://localhost:38080/mcp/http \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"xiaomi/execute_action","arguments":{"device_id":"YOUR_DID","siid":2,"aiid":1}}}' \
   | python3 -m json.tool
 ```
 
-## Step 7: Control Devices (Xiaomi / MIOT)
-
-### Get Areas and Device Classes
-
-```bash
-# Area list
-curl -s -X POST http://localhost:38080/mcp/http \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":10,"method":"tools/call","params":{"name":"xiaomi/get_area_info","arguments":{}}}' \
-  | python3 -m json.tool
-
-# Device classes
-curl -s -X POST http://localhost:38080/mcp/http \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"xiaomi/get_device_classes","arguments":{}}}' \
-  | python3 -m json.tool
-```
-
-### Get Devices by Class
-
-```bash
-curl -s -X POST http://localhost:38080/mcp/http \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":12,"method":"tools/call","params":{"name":"xiaomi/get_devices","arguments":{"device_class":"light"}}}' \
-  | python3 -m json.tool
-```
-
-### Query Device SPEC
-
-> **Parameter naming:** Cross-platform tool `device/specs` uses `deviceId` (camelCase); platform-specific tools (`xiaomi/*`, `tuya/*`, etc.) use `device_id` (snake_case).
-
-```bash
-curl -s -X POST http://localhost:38080/mcp/http \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":13,"method":"tools/call","params":{"name":"device/specs","arguments":{"deviceId":"YOUR_DID"}}}' \
-  | python3 -m json.tool
-```
-
-### Control Device
-
-```bash
-# Read properties (requires device_id, siid, piids)
-curl -s -X POST http://localhost:38080/mcp/http \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"xiaomi/get_properties","arguments":{"device_id":"YOUR_DID","siid":2,"piids":[1]}}}' \
-  | python3 -m json.tool
-
-# Set property (e.g. turn on light — siid:2 is light service, piid:1 is power switch)
-curl -s -X POST http://localhost:38080/mcp/http \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":15,"method":"tools/call","params":{"name":"xiaomi/set_property","arguments":{"device_id":"YOUR_DID","siid":2,"piid":1,"value":true}}}' \
-  | python3 -m json.tool
-
-# Execute action (e.g. toggle switch)
-curl -s -X POST http://localhost:38080/mcp/http \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":16,"method":"tools/call","params":{"name":"xiaomi/execute_action","arguments":{"device_id":"YOUR_DID","siid":2,"aiid":1}}}' \
-  | python3 -m json.tool
-```
-
-**Control flow:**
-1. `device/list` — search by keyword/platform to find the target device
-2. `device/specs` — query the device's `siid` (service ID), `piid` (property ID), `aiid` (action ID)
-3. `xiaomi/get_properties` — read current property values (params: `device_id`, `siid`, `piids` array)
-4. `xiaomi/set_property` — set property value (params: `device_id`, `siid`, `piid`, `value`)
-5. `xiaomi/execute_action` — execute device action (params: `device_id`, `siid`, `aiid`)
-
-### Scene Management
+### Scenes
 
 ```bash
 # List scenes
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":17,"method":"tools/call","params":{"name":"scene/list","arguments":{"platform":"xiaomi"}}}' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"scene/list","arguments":{"platform":"xiaomi"}}}' \
   | python3 -m json.tool
 
-# Trigger scene (requires sceneId from scene/list)
+# Trigger scene
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":18,"method":"tools/call","params":{"name":"scene/trigger","arguments":{"platform":"xiaomi","sceneId":"SCENE_ID"}}}' \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"scene/trigger","arguments":{"platform":"xiaomi","sceneId":"SCENE_ID"}}}' \
   | python3 -m json.tool
 ```
 
-## Step 8: Xiao AI Speaker Control
+### Xiao AI Speaker
 
 ```bash
-# Find speaker
+# TTS broadcast
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":30,"method":"tools/call","params":{"name":"device/list","arguments":{"filter":["speaker","wifispeaker"]}}}' \
-  | python3 -m json.tool
-
-# TTS voice broadcast
-curl -s -X POST http://localhost:38080/mcp/http \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":31,"method":"tools/call","params":{"name":"xiaoai/tts","arguments":{"device_id":"SPEAKER_DID","text":"Hello, welcome home"}}}' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"xiaoai/tts","arguments":{"device_id":"SPEAKER_DID","text":"Hello, welcome home"}}}' \
   | python3 -m json.tool
 
 # Play music
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":32,"method":"tools/call","params":{"name":"xiaoai/play_music","arguments":{"device_id":"SPEAKER_DID","text":"Play some pop music"}}}' \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"xiaoai/play_music","arguments":{"device_id":"SPEAKER_DID","text":"Play some pop music"}}}' \
   | python3 -m json.tool
 
-# Voice control device (silent mode)
+# Voice control (silent mode)
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":33,"method":"tools/call","params":{"name":"xiaoai/control","arguments":{"device_id":"SPEAKER_DID","command":"turn on the living room light","silence":true}}}' \
+  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"xiaoai/control","arguments":{"device_id":"SPEAKER_DID","command":"turn on the living room light","silence":true}}}' \
   | python3 -m json.tool
 ```
 
-## Step 9: Camera Operations
-
-### Using CLI
+### Camera
 
 ```bash
-# List cameras
+# CLI
 feyagate snapshot --list
-
-# Connect and take snapshot
 feyagate snapshot --camera-id CAMERA_DID --connect --count 3
 
-# Scheduled AI analysis
-feyagate scheduled --camera-id CAMERA_DID --interval 300 --auto-connect --prompt "Describe the scene"
-```
-
-### Using API
-
-```bash
-# Connect camera
+# API: connect → wait → snapshot → disconnect
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"xiaomi/camera_connect","arguments":{"camera_id":"CAMERA_DID"}}}'
-
-# Wait for P2P connection to establish
-sleep 3
-
-# Check status
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"xiaomi/camera_connect","arguments":{"camera_id":"CAMERA_DID"}}}'
+# Wait 3-5 seconds for P2P connection
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"xiaomi/camera_status","arguments":{}}}' \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"xiaomi/camera_snapshot","arguments":{"camera_id":"CAMERA_DID","count":1}}}' \
   | python3 -m json.tool
-
-# Take snapshot
-curl -s -X POST http://localhost:38080/mcp/http \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"xiaomi/camera_snapshot","arguments":{"camera_id":"CAMERA_DID","count":1}}}' \
-  | python3 -m json.tool
-
-# Disconnect
-curl -s -X POST http://localhost:38080/mcp/http \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"xiaomi/camera_disconnect","arguments":{"camera_id":"CAMERA_DID"}}}'
-```
-
-## Service Management
-
-```bash
-feyagate status      # Check service status
-feyagate log         # View server logs
-feyagate log -n 50   # View last 50 lines of logs
-feyagate stop        # Stop service
-feyagate restart     # Restart service
-feyagate upgrade     # Upgrade MCP server to latest version
-```
-
-## Install as AI Agent Skill
-
-After setup, install the skill for your AI agent:
-
-```bash
-feyagate install-claude     # Claude Code
-feyagate install-cursor     # Cursor
-feyagate install-openclaw   # OpenClaw
-feyagate install-hermes     # Hermes Agent
-feyagate install-windsurf   # Windsurf
-feyagate install-copilot    # GitHub Copilot (VS Code)
-feyagate install-codex      # OpenAI Codex CLI
 ```
 
 ## Troubleshooting
 
 | Issue | Solution |
 |-------|----------|
-| `command not found: feyagate` | Run `pip install feyagate-skill` |
-| `FeyaGate not installed` | Run `feyagate setup` to download MCP server binary |
-| `connection refused` | Run `feyagate start` to start the service |
-| `authorized: false` | Run `feyagate auth` to authorize Xiaomi account |
-| `cannot open shared object file` | Install system deps: `sudo apt-get install -y libfmt8 libmosquitto1 libyaml-cpp0.7` |
-| `Tool not found` | Check tool name, use `tools/list` to see all available tools |
-| `key 'device_id' not found` | `device/specs` uses `deviceId` (camelCase); platform tools use `device_id` (snake_case) |
-| `camera_connect` fails | Check if camera native libraries exist in `lib/` |
+| `command not found: feyagate` | `pip install feyagate-skill` |
+| `FeyaGate not installed` | `feyagate setup` |
+| `connection refused` | `feyagate start` |
+| `authorized: false` | `feyagate auth` |
+| `cannot open shared object file` | `sudo apt-get install -y libfmt8 libmosquitto1 libyaml-cpp0.7` (Linux) |
+| `Tool not found` | Check tool name with `tools/list` |
+| `key 'device_id' not found` | `device/specs` uses `deviceId`; platform tools use `device_id` |
+| `camera_connect` fails | Check camera native libraries in `lib/` |
 | No frame data | Wait 3-5 seconds, check `xiaomi/camera_status` |
-| Library load failure | Run `ldd ~/.feyagate/bin/miloco-mcp-server \| grep "not found"` to check missing libs |
+| Library load failure | `ldd ~/.feyagate/bin/miloco-mcp-server \| grep "not found"` |
 
-For more details, see [SKILL.md](SKILL.md), [FeyaGate_MCP_API.md](FeyaGate_MCP_API.md), and [FeyaGate_HTTP_API.md](FeyaGate_HTTP_API.md).
+For full API reference, see [SKILL.md](SKILL.md), [FeyaGate_MCP_API.md](FeyaGate_MCP_API.md), and [FeyaGate_HTTP_API.md](FeyaGate_HTTP_API.md).
