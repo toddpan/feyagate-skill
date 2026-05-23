@@ -1,5 +1,14 @@
 # FeyaGate Skill — Quick Start Guide
 
+```
+  _____                 ____       _
+ |  ___|__ _   _  __ _ / ___| __ _| |_ ___
+ | |_ / _ \ | | |/ _` | |  _ / _` | __/ _ \
+ |  _|  __/ |_| | (_| | |_| | (_| | ||  __/
+ |_|  \___|\__, |\__,_|\____|\__,_|\__\___|
+           |___/
+```
+
 > **For AI Assistants (OpenClaw, Claude Code, Hermes, Codex, Windsurf, Copilot, 小智AI, Cursor):**
 > Follow Steps 1-4 sequentially. Report progress at each step. Do NOT skip steps.
 > Steps marked with **[AUTO]** can be executed without asking the user.

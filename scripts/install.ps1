@@ -90,7 +90,14 @@ FeyaGate 一键安装 (Windows)
 
 # ── Welcome ───────────────────────────────────────────────────────────────────
 Write-Host ""
-Write-Host "  FeyaGate 智能家居网关 — 自动安装" -ForegroundColor Cyan
+Write-Host '  _____                 ____       _' -ForegroundColor Cyan
+Write-Host ' |  ___|__ _   _  __ _ / ___| __ _| |_ ___' -ForegroundColor Cyan
+Write-Host ' | |_ / _ \ | | |/ _` | |  _ / _` | __/ _ \' -ForegroundColor Cyan
+Write-Host ' |  _|  __/ |_| | (_| | |_| | (_| | ||  __/' -ForegroundColor Cyan
+Write-Host ' |_|  \___|\__, |\__,_|\____|\__,_|\__\___|' -ForegroundColor Cyan
+Write-Host '           |___/' -ForegroundColor Cyan
+Write-Host ""
+Write-Info "FeyaGate 智能家居网关 — 自动安装"
 Write-Host ""
 Write-Host "  即将自动完成（约 2～5 分钟，需联网）："
 Write-Host "    ① 安装 feyagate 命令行工具"

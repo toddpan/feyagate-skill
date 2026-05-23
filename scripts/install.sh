@@ -5,7 +5,6 @@ set -euo pipefail
 
 INSTALL_DIR="${FEYAGATE_INSTALL_DIR:-$HOME/.feyagate}"
 VERBOSE=0
-PIP_EXTRA=()
 TOTAL_STEPS=4
 
 # ── Colors ────────────────────────────────────────────────────────────────────
@@ -103,7 +102,17 @@ print_next_steps() {
 }
 
 # ── Welcome ───────────────────────────────────────────────────────────────────
-printf "\n${BOLD}${CYAN}  FeyaGate 智能家居网关 — 自动安装${NC}\n"
+printf "\n${BOLD}${CYAN}"
+cat <<'BANNER'
+  _____                 ____       _
+ |  ___|__ _   _  __ _ / ___| __ _| |_ ___
+ | |_ / _ \ | | |/ _` | |  _ / _` | __/ _ \
+ |  _|  __/ |_| | (_| | |_| | (_| | ||  __/
+ |_|  \___|\__, |\__,_|\____|\__,_|\__\___|
+           |___/
+BANNER
+printf "${NC}\n"
+info "FeyaGate 智能家居网关 — 自动安装"
 echo ""
 echo "  即将自动完成（约 2～5 分钟，需联网）："
 echo "    ① 安装 feyagate 命令行工具"
@@ -130,12 +139,17 @@ PIP="$(find_pip "$PYTHON")" || {
 # ── [1/4] pip ─────────────────────────────────────────────────────────────────
 step_n 1 "安装 feyagate 命令行工具…"
 
-[ "$VERBOSE" = 1 ] && PIP_EXTRA+=(--verbose)
-
 # shellcheck disable=SC2086
-if ! $PIP install --force-reinstall "${PIP_EXTRA[@]}" feyagate-skill; then
-    error "安装失败。请检查网络，或稍后重试。"
-    exit 1
+if [ "$VERBOSE" = 1 ]; then
+    if ! $PIP install --force-reinstall --verbose feyagate-skill; then
+        error "安装失败。请检查网络，或稍后重试。"
+        exit 1
+    fi
+else
+    if ! $PIP install --force-reinstall feyagate-skill; then
+        error "安装失败。请检查网络，或稍后重试。"
+        exit 1
+    fi
 fi
 
 command -v feyagate &>/dev/null || export PATH="${HOME}/.local/bin:${PATH}"
