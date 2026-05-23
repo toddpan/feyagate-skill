@@ -91,6 +91,8 @@ print_next_steps() {
     echo "  ① 接入 AI 助手（选一个，装完要重启 AI）："
     echo "       Cursor:       feyagate install-cursor"
     echo "       Claude Code:  feyagate install-claude"
+    echo "       OpenClaw:     feyagate install-openclaw"
+    echo "       Hermes:       feyagate install-hermes"
     echo "       其他助手:     feyagate --help"
     echo ""
     echo "  ② 登录小米/米家:   feyagate auth"

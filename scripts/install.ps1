@@ -67,6 +67,8 @@ function Show-NextSteps {
     Write-Host "  ① 接入 AI 助手（选一个，装完要重启 AI）："
     Write-Host "       Cursor:       feyagate install-cursor"
     Write-Host "       Claude Code:  feyagate install-claude"
+    Write-Host "       OpenClaw:     feyagate install-openclaw"
+    Write-Host "       Hermes:       feyagate install-hermes"
     Write-Host "       其他助手:     feyagate --help"
     Write-Host ""
     Write-Host "  ② 登录小米/米家:   feyagate auth"
