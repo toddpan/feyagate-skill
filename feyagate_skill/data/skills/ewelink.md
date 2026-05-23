@@ -1,9 +1,12 @@
 ---
 name: feyagate-ewelink
-description: eWeLink platform tools for FeyaGate. Account/password login authorization, read/write eWeLink device properties and execute actions for Sonoff and eWeLink devices. Use when working with eWeLink app devices, Sonoff switches, or multi-channel relay control.
+parent: feyagate
+description: eWeLink platform tools. Account/password auth, read/write device properties for Sonoff and eWeLink devices. Use when working with eWeLink app or Sonoff switches.
 ---
 
 # eWeLink Platform Tools
+
+> **Parent skill:** [SKILL.md](../SKILL.md) — provides cross-platform tools (`device/list`, `device/specs`, `platform/status`) and MCP endpoint config.
 
 ## Authorization
 
@@ -89,7 +92,7 @@ Cross-platform tool `device/specs` uses `deviceId` (camelCase).
 - `switch`: `on` / `off` (single channel)
 - `switches`: JSON array `[{"switch": "on", "outlet": 0}]` (multi-channel)
 
-**Workflow:**
+**Workflow (steps 3-4 use parent skill tools):**
 1. `auth/ewelink_login` → login with email/phone and password
 2. `ewelink/refresh` → refresh device list from cloud
 3. `device/list` with `{"filter": [], "platform": "ewelink"}` → list devices

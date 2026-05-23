@@ -1,9 +1,12 @@
 ---
 name: feyagate-tuya
-description: Tuya/Smart Life platform tools for FeyaGate. QR code authorization, device DP property read/write. Use when working with Tuya platform devices, Smart Life app devices, or DP code-based device control.
+parent: feyagate
+description: Tuya/Smart Life platform tools. QR code auth, device DP property read/write. Use when working with Tuya devices or Smart Life app.
 ---
 
 # Tuya Platform Tools
+
+> **Parent skill:** [SKILL.md](../SKILL.md) — provides cross-platform tools (`device/list`, `device/specs`, `platform/status`) and MCP endpoint config.
 
 ## Authorization
 
@@ -99,7 +102,7 @@ Look for the `tuya` entry to verify `authenticated: true`.
 **Parameter convention:** Tuya tools use `device_id` (snake_case).
 Cross-platform tool `device/specs` uses `deviceId` (camelCase).
 
-**Workflow:**
+**Workflow (steps 2-3 use parent skill tools):**
 1. `auth/tuya_qr` → authorize (first time only)
 2. `device/list` with `{"filter": [], "platform": "tuya"}` → list devices
 3. `device/specs` with `{"deviceId": "xxx"}` → get DP definitions (codes)

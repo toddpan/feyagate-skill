@@ -4,30 +4,33 @@
 
 ## Step 1: Install
 
-Detect the OS and run the one-click installer.
+```bash
+pip install feyagate-skill
+```
 
-**macOS / Linux:**
+Verify installation:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.sh | bash
+feyagate --version
 ```
 
-**Windows (PowerShell):**
+## Step 2: Setup MCP Server
 
-```powershell
-iwr -useb https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.ps1 | iex
-```
-
-Default install directory: `~/feyagate-skill`. To customize:
+Download and install the MCP server binary:
 
 ```bash
-# macOS / Linux
-curl -fsSL https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.sh | bash -s -- --dir ~/my-skill
+feyagate setup
 ```
 
-## Step 2: Install System Dependencies (Linux only)
+Default install directory: `~/.feyagate`. To customize:
 
-The installer does **not** include system-level shared libraries. On Linux, install them before starting the service:
+```bash
+feyagate setup --dir ~/my-feyagate
+```
+
+## Step 3: Install System Dependencies (Linux only)
+
+The MCP server requires system-level shared libraries. On Linux, install them before starting the service:
 
 **Ubuntu / Debian:**
 
@@ -40,36 +43,42 @@ sudo apt-get install -y libfmt8 libmosquitto1 libyaml-cpp0.7
 Verify all dependencies are met:
 
 ```bash
-ldd bin/miloco-mcp-server | grep "not found"
+ldd ~/.feyagate/bin/miloco-mcp-server | grep "not found"
 # No output means all dependencies are satisfied
 ```
 
-## Step 3: Start the Service
+## Step 4: Start the Service
 
 ```bash
-# macOS / Linux
-bash scripts/start.sh
-
-# Windows
-scripts\start.bat
+feyagate start
 ```
 
 The service runs at: `http://localhost:38080/mcp/http`
 
+Custom port:
+
+```bash
+feyagate start --port 9090
+```
+
 Verify it's running:
 
 ```bash
-bash scripts/health_check.sh   # macOS / Linux
-scripts\health_check.bat       # Windows
+feyagate status
 ```
 
-## Step 4: Authorize Smart Home Platforms
+## Step 5: Authorize Smart Home Platforms
 
 After the service starts, authorize at least one smart home platform. Choose the platform(s) the user needs.
 
 ### Xiaomi / Mi Home (OAuth)
 
-**Option A: API calls (recommended)**
+```bash
+feyagate auth --status    # Check authorization status
+feyagate auth             # Interactive authorization
+```
+
+Or use API calls directly:
 
 ```bash
 # 1. Get authorization URL
@@ -92,13 +101,6 @@ curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"xiaomi/auth_status","arguments":{}}}' \
   | python3 -m json.tool
-```
-
-**Option B: Using auth.py script**
-
-```bash
-python3 scripts/auth.py --status    # Check authorization status
-python3 scripts/auth.py             # Interactive authorization
 ```
 
 ### Tuya (QR Code Scan)
@@ -197,7 +199,7 @@ curl -s -X POST http://localhost:38080/mcp/http \
   | python3 -m json.tool
 ```
 
-## Step 5: Manage Devices
+## Step 6: Manage Devices
 
 ### List Devices
 
@@ -230,7 +232,7 @@ curl -s -X POST http://localhost:38080/mcp/http \
   | python3 -m json.tool
 ```
 
-## Step 6: Control Devices (Xiaomi / MIOT)
+## Step 7: Control Devices (Xiaomi / MIOT)
 
 ### Get Areas and Device Classes
 
@@ -259,44 +261,43 @@ curl -s -X POST http://localhost:38080/mcp/http \
 
 ### Query Device SPEC
 
+> **Parameter naming:** Cross-platform tool `device/specs` uses `deviceId` (camelCase); platform-specific tools (`xiaomi/*`, `tuya/*`, etc.) use `device_id` (snake_case).
+
 ```bash
-# Note: device/specs uses device_id (snake_case)
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":13,"method":"tools/call","params":{"name":"device/specs","arguments":{"device_id":"YOUR_DID"}}}' \
+  -d '{"jsonrpc":"2.0","id":13,"method":"tools/call","params":{"name":"device/specs","arguments":{"deviceId":"YOUR_DID"}}}' \
   | python3 -m json.tool
 ```
 
 ### Control Device
 
-> **Parameter naming:** `device/specs` uses `device_id` (snake_case); Xiaomi control tools use `deviceId` (camelCase).
-
 ```bash
-# Read properties (requires deviceId, siid, piids)
+# Read properties (requires device_id, siid, piids)
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"get_xiaomi_device_properties","arguments":{"deviceId":"YOUR_DID","siid":2,"piids":[1]}}}' \
+  -d '{"jsonrpc":"2.0","id":14,"method":"tools/call","params":{"name":"xiaomi/get_properties","arguments":{"device_id":"YOUR_DID","siid":2,"piids":[1]}}}' \
   | python3 -m json.tool
 
 # Set property (e.g. turn on light — siid:2 is light service, piid:1 is power switch)
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":15,"method":"tools/call","params":{"name":"set_xiaomi_device_property","arguments":{"deviceId":"YOUR_DID","siid":2,"piid":1,"value":true}}}' \
+  -d '{"jsonrpc":"2.0","id":15,"method":"tools/call","params":{"name":"xiaomi/set_property","arguments":{"device_id":"YOUR_DID","siid":2,"piid":1,"value":true}}}' \
   | python3 -m json.tool
 
 # Execute action (e.g. toggle switch)
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":16,"method":"tools/call","params":{"name":"execute_xiaomi_device_action","arguments":{"deviceId":"YOUR_DID","siid":2,"aiid":1}}}' \
+  -d '{"jsonrpc":"2.0","id":16,"method":"tools/call","params":{"name":"xiaomi/execute_action","arguments":{"device_id":"YOUR_DID","siid":2,"aiid":1}}}' \
   | python3 -m json.tool
 ```
 
 **Control flow:**
 1. `device/list` — search by keyword/platform to find the target device
 2. `device/specs` — query the device's `siid` (service ID), `piid` (property ID), `aiid` (action ID)
-3. `get_xiaomi_device_properties` — read current property values (params: `deviceId`, `siid`, `piids` array)
-4. `set_xiaomi_device_property` — set property value (params: `deviceId`, `siid`, `piid`, `value`)
-5. `execute_xiaomi_device_action` — execute device action (params: `deviceId`, `siid`, `aiid`)
+3. `xiaomi/get_properties` — read current property values (params: `device_id`, `siid`, `piids` array)
+4. `xiaomi/set_property` — set property value (params: `device_id`, `siid`, `piid`, `value`)
+5. `xiaomi/execute_action` — execute device action (params: `device_id`, `siid`, `aiid`)
 
 ### Scene Management
 
@@ -304,17 +305,17 @@ curl -s -X POST http://localhost:38080/mcp/http \
 # List scenes
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":17,"method":"tools/call","params":{"name":"xiaomi/scene_list","arguments":{}}}' \
+  -d '{"jsonrpc":"2.0","id":17,"method":"tools/call","params":{"name":"scene/list","arguments":{"platform":"xiaomi"}}}' \
   | python3 -m json.tool
 
-# Trigger scene (requires sceneId from scene_list)
+# Trigger scene (requires sceneId from scene/list)
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":18,"method":"tools/call","params":{"name":"xiaomi/scene_trigger","arguments":{"sceneId":"SCENE_ID"}}}' \
+  -d '{"jsonrpc":"2.0","id":18,"method":"tools/call","params":{"name":"scene/trigger","arguments":{"platform":"xiaomi","sceneId":"SCENE_ID"}}}' \
   | python3 -m json.tool
 ```
 
-## Step 7: Xiao AI Speaker Control
+## Step 8: Xiao AI Speaker Control
 
 ```bash
 # Find speaker
@@ -342,7 +343,22 @@ curl -s -X POST http://localhost:38080/mcp/http \
   | python3 -m json.tool
 ```
 
-## Step 8: Camera Operations
+## Step 9: Camera Operations
+
+### Using CLI
+
+```bash
+# List cameras
+feyagate snapshot --list
+
+# Connect and take snapshot
+feyagate snapshot --camera-id CAMERA_DID --connect --count 3
+
+# Scheduled AI analysis
+feyagate scheduled --camera-id CAMERA_DID --interval 300 --auto-connect --prompt "Describe the scene"
+```
+
+### Using API
 
 ```bash
 # Connect camera
@@ -371,81 +387,44 @@ curl -s -X POST http://localhost:38080/mcp/http \
   -d '{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"xiaomi/camera_disconnect","arguments":{"camera_id":"CAMERA_DID"}}}'
 ```
 
-### Snapshot Script
-
-```bash
-python3 scripts/snapshot.py --list
-python3 scripts/snapshot.py --connect CAMERA_DID --count 3
-```
-
-### Scheduled AI Analysis
-
-```bash
-python3 scripts/scheduled_analysis.py \
-  --camera-id CAMERA_DID \
-  --interval 300 \
-  --auto-connect \
-  --prompt "Describe the scene. Flag any security concerns."
-```
-
 ## Service Management
 
 ```bash
-# macOS / Linux
-bash scripts/health_check.sh     # Health check
-bash scripts/stop.sh             # Stop service
-
-# Windows
-scripts\health_check.bat
-scripts\stop.bat
+feyagate status      # Check service status
+feyagate log         # View server logs
+feyagate log -n 50   # View last 50 lines of logs
+feyagate stop        # Stop service
+feyagate restart     # Restart service
+feyagate upgrade     # Upgrade MCP server to latest version
 ```
 
-## Online Upgrade
+## Install as AI Agent Skill
 
-Check for new versions (does not perform upgrade):
+After setup, install the skill for your AI agent:
 
 ```bash
-# macOS / Linux
-bash scripts/upgrade.sh --check
-
-# Windows
-powershell -ExecutionPolicy Bypass -File scripts\upgrade.ps1 -Check
+feyagate install-claude     # Claude Code
+feyagate install-cursor     # Cursor
+feyagate install-openclaw   # OpenClaw
+feyagate install-hermes     # Hermes Agent
+feyagate install-windsurf   # Windsurf
+feyagate install-copilot    # GitHub Copilot (VS Code)
+feyagate install-codex      # OpenAI Codex CLI
 ```
-
-Perform upgrade (interactive):
-
-```bash
-# macOS / Linux
-bash scripts/upgrade.sh
-
-# Windows
-powershell -ExecutionPolicy Bypass -File scripts\upgrade.ps1
-```
-
-Non-interactive mode (auto-confirm, for automation):
-
-```bash
-# macOS / Linux
-bash scripts/upgrade.sh --yes
-
-# Windows
-powershell -ExecutionPolicy Bypass -File scripts\upgrade.ps1 -Yes
-```
-
-The upgrade automatically: stops service -> backs up -> downloads new version -> verifies MD5 -> extracts -> updates version -> restarts service -> runs health check. If any step fails, it rolls back to the previous version.
 
 ## Troubleshooting
 
 | Issue | Solution |
 |-------|----------|
-| `connection refused` | Run `bash scripts/start.sh` to start the service |
-| `authorized: false` | Get authorization URL via `xiaomi/auth_url` and complete OAuth |
+| `command not found: feyagate` | Run `pip install feyagate-skill` |
+| `FeyaGate not installed` | Run `feyagate setup` to download MCP server binary |
+| `connection refused` | Run `feyagate start` to start the service |
+| `authorized: false` | Run `feyagate auth` to authorize Xiaomi account |
 | `cannot open shared object file` | Install system deps: `sudo apt-get install -y libfmt8 libmosquitto1 libyaml-cpp0.7` |
 | `Tool not found` | Check tool name, use `tools/list` to see all available tools |
-| `key 'device_id' not found` | `device/specs` uses `device_id` (snake_case); Xiaomi control tools use `deviceId` (camelCase) |
-| `key 'siid' not found` | Use `get_xiaomi_device_properties` etc. and pass `deviceId`/`siid`/`piids` parameters |
+| `key 'device_id' not found` | `device/specs` uses `deviceId` (camelCase); platform tools use `device_id` (snake_case) |
 | `camera_connect` fails | Check if camera native libraries exist in `lib/` |
 | No frame data | Wait 3-5 seconds, check `xiaomi/camera_status` |
-| Library load failure | Run `ldd bin/miloco-mcp-server \| grep "not found"` to check missing libs |
+| Library load failure | Run `ldd ~/.feyagate/bin/miloco-mcp-server \| grep "not found"` to check missing libs |
 
 For more details, see [SKILL.md](SKILL.md), [FeyaGate_MCP_API.md](FeyaGate_MCP_API.md), and [FeyaGate_HTTP_API.md](FeyaGate_HTTP_API.md).

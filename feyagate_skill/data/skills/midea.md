@@ -1,9 +1,12 @@
 ---
 name: feyagate-midea
-description: Midea platform tools for FeyaGate. Account/password login authorization, read/write Midea device properties (AC, appliances) and execute actions. Use when working with Midea smart appliances, air conditioners, or Midea Cloud devices.
+parent: feyagate
+description: Midea platform tools. Account/password auth, read/write device properties (AC, appliances). Use when working with Midea smart appliances or air conditioners.
 ---
 
 # Midea Platform Tools
+
+> **Parent skill:** [SKILL.md](../SKILL.md) — provides cross-platform tools (`device/list`, `device/specs`, `platform/status`) and MCP endpoint config.
 
 ## Authorization
 
@@ -90,7 +93,7 @@ Cross-platform tool `device/specs` uses `deviceId` (camelCase).
 - `mode`: string (`cool`, `heat`, `auto`)
 - `fan_speed`: string (`low`, `medium`, `high`)
 
-**Workflow:**
+**Workflow (steps 3-4 use parent skill tools):**
 1. `auth/midea_login` → login with account/password
 2. `midea/refresh` → refresh device list from cloud
 3. `device/list` with `{"filter": [], "platform": "midea"}` → list devices

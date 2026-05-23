@@ -1,9 +1,12 @@
 ---
 name: feyagate-automation
-description: Automation tools for FeyaGate. Schedule tasks (timed device control), trigger engine (camera-based automation), room management, and memory/note system. Use when setting up scheduled actions, automated triggers, room organization, or persistent memory.
+parent: feyagate
+description: Automation tools. Schedule tasks, trigger engine, room management, memory/note system, skill management. Use when setting up scheduled actions, automation, rooms, or persistent memory.
 ---
 
 # Automation & Utility Tools
+
+> **Parent skill:** [SKILL.md](../SKILL.md) — provides cross-platform tools and MCP endpoint config.
 
 ## Schedule
 

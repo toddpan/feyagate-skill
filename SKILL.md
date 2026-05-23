@@ -1,6 +1,25 @@
 ---
 name: feyagate
-description: MCP smart home gateway skill for AI agents (OpenClaw, Claude Code, Hermes, Codex, Windsurf, Copilot, 小智AI). Control multi-platform IoT devices via MCP protocol — supports Xiaomi/Mi Home, Tuya, Midea, eWeLink, Serial, and GPIO platforms. Provides cross-platform device discovery and control, MIOT device properties, XiaoAI speaker TTS/music, camera P2P streaming and snapshots, scheduled tasks, trigger automation, vision AI analysis, memory system, room management, and skill management. Use when working with smart home, IoT device control, home automation, Xiaomi, Tuya, Midea, eWeLink, MIOT protocol, cameras, surveillance, XiaoAI speakers, TTS, automation, scheduling, OpenClaw skill, Hermes skill, MCP server, MCP skill, or AI agent tool.
+description: MCP smart home gateway for AI agents. Multi-platform IoT device control via MCP protocol.
+sub_skills:
+  - name: feyagate-xiaomi
+    file: skills/xiaomi.md
+    trigger: Xiaomi, Mi Home, MIOT, 小米, camera, P2P, XiaoAI, 小爱, TTS, speaker, 摄像头
+  - name: feyagate-tuya
+    file: skills/tuya.md
+    trigger: Tuya, Smart Life, 涂鸦, DP code, QR auth
+  - name: feyagate-midea
+    file: skills/midea.md
+    trigger: Midea, 美居, 美的, AC, air conditioner, 空调
+  - name: feyagate-ewelink
+    file: skills/ewelink.md
+    trigger: eWeLink, Sonoff, iTEAD, switch, relay
+  - name: feyagate-automation
+    file: skills/automation.md
+    trigger: schedule, timer, trigger, automation, room, memory, note, 定时, 自动化, 房间, 记忆
+  - name: feyagate-extension
+    file: skills/extension.md
+    trigger: serial, RS485, UART, GPIO, Xiaozhi, 小智, license, config, stats, 统计
 ---
 
 # FeyaGate Skill — MCP Smart Home Gateway for AI Agents
@@ -53,18 +72,23 @@ Unified interfaces that work across all platforms. System auto-detects device pl
 
 > **Parameter convention:** `device/specs` uses `deviceId` (camelCase); platform-specific tools (`xiaomi/*`, `tuya/*`, etc.) use `device_id` (snake_case).
 
-## Platform Skill Modules
+## Sub-Skill Loading Guide (for AI agents)
 
-Detailed tool references are split into sub-skill files by platform. Load as needed:
+This skill uses a modular structure. The main skill defines cross-platform tools; platform-specific tools are in sub-skill files.
 
-| Module | File | Covers |
-|--------|------|--------|
-| **Xiaomi** | [skills/xiaomi.md](skills/xiaomi.md) | MIOT device control, OAuth auth, camera P2P, XiaoAI speaker |
-| **Tuya** | [skills/tuya.md](skills/tuya.md) | DP property read/write, QR code auth |
-| **Midea** | [skills/midea.md](skills/midea.md) | AC/appliance control, account auth |
-| **eWeLink** | [skills/ewelink.md](skills/ewelink.md) | Sonoff/eWeLink switches, multi-channel |
-| **Automation** | [skills/automation.md](skills/automation.md) | Schedule, trigger engine, room, memory, skill system |
-| **Extension** | [skills/extension.md](skills/extension.md) | Serial, GPIO, Xiaozhi AI, license, config, stats |
+**Loading strategy:**
+1. **Always load** this main SKILL.md first — it provides the core cross-platform tools and MCP endpoint info.
+2. **Load sub-skills on demand** based on the user's intent. Each sub-skill's `trigger` keywords (listed in frontmatter `sub_skills`) indicate when to load it.
+3. **Cross-platform workflow** (no sub-skill needed): `device/list` → `device/specs` → identify platform → load corresponding sub-skill for control operations.
+
+| Sub-Skill | File | When to Load | Covers |
+|-----------|------|-------------|--------|
+| **feyagate-xiaomi** | [skills/xiaomi.md](skills/xiaomi.md) | Xiaomi/Mi Home devices, cameras, XiaoAI speakers | MIOT device control, OAuth auth, camera P2P, XiaoAI TTS/music |
+| **feyagate-tuya** | [skills/tuya.md](skills/tuya.md) | Tuya/Smart Life devices | DP property read/write, QR code auth |
+| **feyagate-midea** | [skills/midea.md](skills/midea.md) | Midea/美的 appliances | AC/appliance control, account auth |
+| **feyagate-ewelink** | [skills/ewelink.md](skills/ewelink.md) | eWeLink/Sonoff devices | Switch control, multi-channel |
+| **feyagate-automation** | [skills/automation.md](skills/automation.md) | Scheduling, automation, rooms, memory | Schedule, trigger engine, room, memory, skill system |
+| **feyagate-extension** | [skills/extension.md](skills/extension.md) | Serial, GPIO, license, config | Serial, GPIO, Xiaozhi AI, license, config, stats |
 
 ## License System
 

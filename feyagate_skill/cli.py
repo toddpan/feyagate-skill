@@ -10,167 +10,194 @@ from . import __version__, DEFAULT_INSTALL_DIR, MCP_DEFAULT_PORT
 
 
 def _install_claude():
-    """Configure Claude Code MCP settings."""
-    import json as _json
-    claude_config = Path.home() / ".claude.json"
+    """Install FeyaGate skill for Claude Code via symlink."""
     install_dir = Path(os.path.expanduser(DEFAULT_INSTALL_DIR))
-    binary = install_dir / "bin" / "miloco-mcp-server"
-
-    if not binary.exists():
-        print("ERROR: MCP server not installed. Run: feyagate setup")
+    if not install_dir.exists():
+        print("ERROR: FeyaGate not installed. Run: feyagate setup")
         return False
 
+    skills_dir = Path.home() / ".claude" / "skills"
+    link = skills_dir / "feyagate"
+
     try:
-        config = {}
-        if claude_config.exists():
-            try:
-                config = _json.loads(claude_config.read_text(encoding="utf-8"))
-            except (OSError, _json.JSONDecodeError) as exc:
-                print(f"Warning: Cannot read {claude_config}: {exc}")
+        skills_dir.mkdir(parents=True, exist_ok=True)
 
-        mcp_servers = config.setdefault("mcpServers", {})
-        mcp_servers["feyagate"] = {
-            "type": "streamable-http",
-            "url": "http://localhost:38080/mcp/http",
-        }
+        if link.is_symlink() or link.exists():
+            link.unlink()
 
-        claude_config.write_text(
-            _json.dumps(config, indent=2, ensure_ascii=False), encoding="utf-8"
-        )
-        print(f"Added 'feyagate' MCP server to {claude_config}")
-        print(f"  URL: http://localhost:38080/mcp/http")
+        link.symlink_to(install_dir)
+        print(f"Installed: {link} -> {install_dir}")
         print()
-        print("Make sure to start the server: feyagate start")
+        print("Restart Claude Code to load the skill.")
         return True
     except OSError as exc:
-        print(f"ERROR: Failed to write config: {exc}")
+        print(f"ERROR: Failed to create symlink: {exc}")
         return False
 
 
 def _install_cursor():
-    """Configure Cursor MCP settings."""
-    import json as _json
-    cursor_config = Path.home() / ".cursor" / "mcp.json"
+    """Install FeyaGate skill commands for Cursor via symlink."""
     install_dir = Path(os.path.expanduser(DEFAULT_INSTALL_DIR))
-    binary = install_dir / "bin" / "miloco-mcp-server"
-
-    if not binary.exists():
-        print("ERROR: MCP server not installed. Run: feyagate setup")
+    if not install_dir.exists():
+        print("ERROR: FeyaGate not installed. Run: feyagate setup")
         return False
 
+    skills_dir = Path.home() / ".cursor" / "skills"
+    link = skills_dir / "feyagate"
+
     try:
-        cursor_config.parent.mkdir(parents=True, exist_ok=True)
+        skills_dir.mkdir(parents=True, exist_ok=True)
 
-        config = {}
-        if cursor_config.exists():
-            try:
-                config = _json.loads(cursor_config.read_text(encoding="utf-8"))
-            except (OSError, _json.JSONDecodeError) as exc:
-                print(f"Warning: Cannot read {cursor_config}: {exc}")
+        if link.is_symlink() or link.exists():
+            link.unlink()
 
-        mcp_servers = config.setdefault("mcpServers", {})
-        mcp_servers["feyagate"] = {
-            "type": "streamable-http",
-            "url": "http://localhost:38080/mcp/http",
-        }
-
-        cursor_config.write_text(
-            _json.dumps(config, indent=2, ensure_ascii=False), encoding="utf-8"
-        )
-        print(f"Added 'feyagate' MCP server to {cursor_config}")
-        print(f"  URL: http://localhost:38080/mcp/http")
+        link.symlink_to(install_dir)
+        print(f"Installed: {link} -> {install_dir}")
         print()
-        print("Make sure to start the server: feyagate start")
+        print("Restart Cursor to load the skill.")
         return True
     except OSError as exc:
-        print(f"ERROR: Failed to write config: {exc}")
+        print(f"ERROR: Failed to create symlink: {exc}")
         return False
 
 
 def _install_openclaw():
-    """Configure OpenClaw MCP settings."""
-    import json as _json
-
-    openclaw_config = Path.home() / ".openclaw" / "openclaw.json"
+    """Install FeyaGate skill commands for OpenClaw via symlink."""
     install_dir = Path(os.path.expanduser(DEFAULT_INSTALL_DIR))
-    binary = install_dir / "bin" / "miloco-mcp-server"
-
-    if not binary.exists():
-        print("ERROR: MCP server not installed. Run: feyagate setup")
+    if not install_dir.exists():
+        print("ERROR: FeyaGate not installed. Run: feyagate setup")
         return False
 
+    skills_dir = Path.home() / ".openclaw" / "skills"
+    link = skills_dir / "feyagate"
+
     try:
-        config = {}
-        if openclaw_config.exists():
-            try:
-                config = _json.loads(openclaw_config.read_text(encoding="utf-8"))
-            except (OSError, _json.JSONDecodeError) as exc:
-                print(f"Warning: Cannot read {openclaw_config}: {exc}")
+        skills_dir.mkdir(parents=True, exist_ok=True)
 
-        if not isinstance(config, dict):
-            config = {}
+        if link.is_symlink() or link.exists():
+            link.unlink()
 
-        mcp_servers = config.setdefault("mcpServers", {})
-        mcp_servers["feyagate"] = {
-            "type": "streamable-http",
-            "url": "http://localhost:38080/mcp/http",
-        }
-
-        openclaw_config.write_text(
-            _json.dumps(config, indent=2, ensure_ascii=False), encoding="utf-8"
-        )
-        print(f"Added 'feyagate' MCP server to {openclaw_config}")
-        print(f"  URL: http://localhost:38080/mcp/http")
+        link.symlink_to(install_dir)
+        print(f"Installed: {link} -> {install_dir}")
         print()
-        print("Make sure to start the server: feyagate start")
+        print("Restart OpenClaw to load the skill.")
         return True
     except OSError as exc:
-        print(f"ERROR: Failed to write config: {exc}")
+        print(f"ERROR: Failed to create symlink: {exc}")
         return False
 
 
 def _install_hermes():
-    """Configure Hermes Agent MCP settings."""
-    import yaml
-
-    hermes_config = Path.home() / ".hermes" / "config.yaml"
+    """Install FeyaGate skill commands for Hermes Agent via symlink."""
     install_dir = Path(os.path.expanduser(DEFAULT_INSTALL_DIR))
-    binary = install_dir / "bin" / "miloco-mcp-server"
-
-    if not binary.exists():
-        print("ERROR: MCP server not installed. Run: feyagate setup")
+    if not install_dir.exists():
+        print("ERROR: FeyaGate not installed. Run: feyagate setup")
         return False
 
+    skills_dir = Path.home() / ".hermes" / "skills"
+    link = skills_dir / "feyagate"
+
     try:
-        config = {}
-        if hermes_config.exists():
-            try:
-                content = hermes_config.read_text(encoding="utf-8")
-                config = yaml.safe_load(content) or {}
-            except (OSError, Exception) as exc:
-                print(f"Warning: Cannot read {hermes_config}: {exc}")
+        skills_dir.mkdir(parents=True, exist_ok=True)
 
-        if not isinstance(config, dict):
-            config = {}
+        if link.is_symlink() or link.exists():
+            link.unlink()
 
-        # Hermes MCP servers config: mcp.servers.<name>
-        mcp_config = config.setdefault("mcp", {})
-        servers = mcp_config.setdefault("servers", {})
-        servers["feyagate"] = {
-            "url": "http://localhost:38080/mcp/http",
-            "transport": "http",
-        }
-
-        hermes_config.parent.mkdir(parents=True, exist_ok=True)
-        with open(hermes_config, "w", encoding="utf-8") as f:
-            yaml.dump(config, f, default_flow_style=False, allow_unicode=True)
-        print(f"Added 'feyagate' MCP server to {hermes_config}")
-        print(f"  URL: http://localhost:38080/mcp/http")
+        link.symlink_to(install_dir)
+        print(f"Installed: {link} -> {install_dir}")
         print()
-        print("Make sure to start the server: feyagate start")
+        print("Hermes Agent loads skills automatically.")
         return True
     except OSError as exc:
-        print(f"ERROR: Failed to write config: {exc}")
+        print(f"ERROR: Failed to create symlink: {exc}")
+        return False
+
+
+def _install_windsurf():
+    """Install FeyaGate skill commands for Windsurf via symlink."""
+    install_dir = Path(os.path.expanduser(DEFAULT_INSTALL_DIR))
+    if not install_dir.exists():
+        print("ERROR: FeyaGate not installed. Run: feyagate setup")
+        return False
+
+    skills_dir = Path.home() / ".codeium" / "windsurf" / "skills"
+    link = skills_dir / "feyagate"
+
+    try:
+        skills_dir.mkdir(parents=True, exist_ok=True)
+
+        if link.is_symlink() or link.exists():
+            link.unlink()
+
+        link.symlink_to(install_dir)
+        print(f"Installed: {link} -> {install_dir}")
+        print()
+        print("Restart Windsurf to load the skill.")
+        return True
+    except OSError as exc:
+        print(f"ERROR: Failed to create symlink: {exc}")
+        return False
+
+
+def _install_copilot():
+    """Install FeyaGate skill commands for GitHub Copilot (VS Code) via symlink."""
+    install_dir = Path(os.path.expanduser(DEFAULT_INSTALL_DIR))
+    if not install_dir.exists():
+        print("ERROR: FeyaGate not installed. Run: feyagate setup")
+        return False
+
+    # VS Code user data directory varies by OS
+    import platform as _platform
+    system = _platform.system()
+    if system == "Darwin":
+        vscode_dir = Path.home() / "Library" / "Application Support" / "Code"
+    elif system == "Windows":
+        vscode_dir = Path.home() / "AppData" / "Roaming" / "Code"
+    else:
+        vscode_dir = Path.home() / ".config" / "Code"
+
+    skills_dir = vscode_dir / "skills"
+    link = skills_dir / "feyagate"
+
+    try:
+        skills_dir.mkdir(parents=True, exist_ok=True)
+
+        if link.is_symlink() or link.exists():
+            link.unlink()
+
+        link.symlink_to(install_dir)
+        print(f"Installed: {link} -> {install_dir}")
+        print()
+        print("Restart VS Code to load the skill.")
+        return True
+    except OSError as exc:
+        print(f"ERROR: Failed to create symlink: {exc}")
+        return False
+
+
+def _install_codex():
+    """Install FeyaGate skill commands for OpenAI Codex CLI via symlink."""
+    install_dir = Path(os.path.expanduser(DEFAULT_INSTALL_DIR))
+    if not install_dir.exists():
+        print("ERROR: FeyaGate not installed. Run: feyagate setup")
+        return False
+
+    skills_dir = Path.home() / ".codex" / "skills"
+    link = skills_dir / "feyagate"
+
+    try:
+        skills_dir.mkdir(parents=True, exist_ok=True)
+
+        if link.is_symlink() or link.exists():
+            link.unlink()
+
+        link.symlink_to(install_dir)
+        print(f"Installed: {link} -> {install_dir}")
+        print()
+        print("Restart Codex CLI to load the skill.")
+        return True
+    except OSError as exc:
+        print(f"ERROR: Failed to create symlink: {exc}")
         return False
 
 
@@ -237,16 +264,25 @@ def main():
     p_sched.add_argument("--one-shot", action="store_true")
 
     # install-claude
-    sub.add_parser("install-claude", help="Configure Claude Code MCP settings")
+    sub.add_parser("install-claude", help="Install FeyaGate skill commands for Claude Code")
 
     # install-cursor
-    sub.add_parser("install-cursor", help="Configure Cursor MCP settings")
+    sub.add_parser("install-cursor", help="Install FeyaGate skill commands for Cursor")
 
     # install-openclaw
-    sub.add_parser("install-openclaw", help="Configure OpenClaw MCP settings")
+    sub.add_parser("install-openclaw", help="Install FeyaGate skill commands for OpenClaw")
 
     # install-hermes
-    sub.add_parser("install-hermes", help="Configure Hermes Agent MCP settings")
+    sub.add_parser("install-hermes", help="Install FeyaGate skill commands for Hermes Agent")
+
+    # install-windsurf
+    sub.add_parser("install-windsurf", help="Install FeyaGate skill commands for Windsurf")
+
+    # install-copilot
+    sub.add_parser("install-copilot", help="Install FeyaGate skill commands for GitHub Copilot (VS Code)")
+
+    # install-codex
+    sub.add_parser("install-codex", help="Install FeyaGate skill commands for OpenAI Codex CLI")
 
     # upgrade
     sub.add_parser("upgrade", help="Upgrade MCP server to latest version")
@@ -315,6 +351,15 @@ def main():
 
     elif args.command == "install-hermes":
         _install_hermes()
+
+    elif args.command == "install-windsurf":
+        _install_windsurf()
+
+    elif args.command == "install-copilot":
+        _install_copilot()
+
+    elif args.command == "install-codex":
+        _install_codex()
 
     elif args.command == "upgrade":
         from .installer import do_setup

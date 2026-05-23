@@ -1,9 +1,12 @@
 ---
 name: feyagate-extension
-description: Hardware extension tools for FeyaGate. Serial port device control (RS485/UART), GPIO pin management, and Xiaozhi AI platform integration. Use when working with serial devices, GPIO switches, or connecting to Xiaozhi voice assistant.
+parent: feyagate
+description: Hardware extension tools. Serial (RS485/UART), GPIO, Xiaozhi AI, license, config, stats. Use when working with serial devices, GPIO pins, or system configuration.
 ---
 
 # Hardware Extension & Integration Tools
+
+> **Parent skill:** [SKILL.md](../SKILL.md) — provides cross-platform tools and MCP endpoint config.
 
 ## Serial Extension
 

@@ -8,7 +8,7 @@ class TestPackageInit:
 
     def test_version(self):
         assert isinstance(feyagate_skill.__version__, str)
-        assert feyagate_skill.__version__ == "1.2.2"
+        assert feyagate_skill.__version__ == "1.2.3"
 
     def test_author(self):
         assert feyagate_skill.__author__ == "panzuji"

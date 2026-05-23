@@ -6,168 +6,270 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from feyagate_skill.cli import (
-    _install_claude, _install_cursor, _install_openclaw, _install_hermes, main
+    _install_claude, _install_cursor, _install_openclaw, _install_hermes,
+    _install_windsurf, _install_copilot, _install_codex, main,
 )
 
 
 class TestInstallClaude:
-    """Test Claude Code MCP config installation."""
+    """Test Claude Code skill symlink installation."""
 
-    def test_missing_binary(self, tmp_path):
-        # Point DEFAULT_INSTALL_DIR at tmp_path where no binary exists
-        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(tmp_path)):
+    def test_missing_install_dir(self, tmp_path):
+        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(tmp_path / "nonexistent")):
             assert _install_claude() is False
 
     def test_successful_install(self, tmp_path):
-        # Create binary
         install_dir = tmp_path / "feyagate"
-        (install_dir / "bin").mkdir(parents=True)
-        (install_dir / "bin" / "miloco-mcp-server").write_text("#!/bin/sh", encoding="utf-8")
+        install_dir.mkdir()
 
         with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
              patch("pathlib.Path.home", return_value=tmp_path):
             assert _install_claude() is True
 
-    def test_read_existing_config(self, tmp_path):
-        install_dir = tmp_path / "feyagate"
-        (install_dir / "bin").mkdir(parents=True)
-        (install_dir / "bin" / "miloco-mcp-server").write_text("#!/bin/sh", encoding="utf-8")
+        link = tmp_path / ".claude" / "skills" / "feyagate"
+        assert link.is_symlink()
+        assert link.resolve() == install_dir.resolve()
 
-        # Create existing config
-        import json
-        config_path = tmp_path / ".claude.json"
-        existing = {"mcpServers": {"existing": {"type": "stdio"}}}
-        config_path.write_text(json.dumps(existing), encoding="utf-8")
+    def test_replaces_existing_symlink(self, tmp_path):
+        install_dir = tmp_path / "feyagate"
+        install_dir.mkdir()
+        skills_dir = tmp_path / ".claude" / "skills"
+        skills_dir.mkdir(parents=True)
+        old_target = tmp_path / "old"
+        old_target.mkdir()
+        (skills_dir / "feyagate").symlink_to(old_target)
 
         with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
              patch("pathlib.Path.home", return_value=tmp_path):
             assert _install_claude() is True
+
+        link = skills_dir / "feyagate"
+        assert link.is_symlink()
+        assert link.resolve() == install_dir.resolve()
 
 
 class TestInstallCursor:
-    """Test Cursor MCP config installation."""
+    """Test Cursor skill symlink installation."""
 
-    def test_missing_binary(self, tmp_path):
-        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(tmp_path)):
+    def test_missing_install_dir(self, tmp_path):
+        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(tmp_path / "nonexistent")):
             assert _install_cursor() is False
 
     def test_successful_install(self, tmp_path):
         install_dir = tmp_path / "feyagate"
-        (install_dir / "bin").mkdir(parents=True)
-        (install_dir / "bin" / "miloco-mcp-server").write_text("#!/bin/sh", encoding="utf-8")
+        install_dir.mkdir()
 
         with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
              patch("pathlib.Path.home", return_value=tmp_path):
             assert _install_cursor() is True
 
-    def test_creates_parent_dir(self, tmp_path):
+        link = tmp_path / ".cursor" / "skills" / "feyagate"
+        assert link.is_symlink()
+        assert link.resolve() == install_dir.resolve()
+
+    def test_replaces_existing_symlink(self, tmp_path):
         install_dir = tmp_path / "feyagate"
-        (install_dir / "bin").mkdir(parents=True)
-        (install_dir / "bin" / "miloco-mcp-server").write_text("#!/bin/sh", encoding="utf-8")
+        install_dir.mkdir()
+        skills_dir = tmp_path / ".cursor" / "skills"
+        skills_dir.mkdir(parents=True)
+        old_target = tmp_path / "old"
+        old_target.mkdir()
+        (skills_dir / "feyagate").symlink_to(old_target)
 
         with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
              patch("pathlib.Path.home", return_value=tmp_path):
-            result = _install_cursor()
-        assert result is True
-        cursor_dir = tmp_path / ".cursor"
-        assert cursor_dir.exists()
+            assert _install_cursor() is True
+
+        link = skills_dir / "feyagate"
+        assert link.is_symlink()
+        assert link.resolve() == install_dir.resolve()
 
 
 class TestInstallOpenclaw:
-    """Test OpenClaw MCP config installation."""
+    """Test OpenClaw skill symlink installation."""
 
-    def test_missing_binary(self, tmp_path):
-        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(tmp_path)):
+    def test_missing_install_dir(self, tmp_path):
+        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(tmp_path / "nonexistent")):
             assert _install_openclaw() is False
 
     def test_successful_install(self, tmp_path):
         install_dir = tmp_path / "feyagate"
-        (install_dir / "bin").mkdir(parents=True)
-        (install_dir / "bin" / "miloco-mcp-server").write_text("#!/bin/sh", encoding="utf-8")
-
-        # Create .openclaw directory
-        (tmp_path / ".openclaw").mkdir(parents=True)
+        install_dir.mkdir()
 
         with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
              patch("pathlib.Path.home", return_value=tmp_path):
             assert _install_openclaw() is True
 
-    def test_existing_config(self, tmp_path):
-        import json
+        link = tmp_path / ".openclaw" / "skills" / "feyagate"
+        assert link.is_symlink()
+        assert link.resolve() == install_dir.resolve()
+
+    def test_replaces_existing_symlink(self, tmp_path):
         install_dir = tmp_path / "feyagate"
-        (install_dir / "bin").mkdir(parents=True)
-        (install_dir / "bin" / "miloco-mcp-server").write_text("#!/bin/sh", encoding="utf-8")
-
-        # Create existing config
-        openclaw_dir = tmp_path / ".openclaw"
-        openclaw_dir.mkdir(parents=True)
-        config_path = openclaw_dir / "openclaw.json"
-        existing = {"mcpServers": {"existing": {"type": "stdio"}}}
-        config_path.write_text(json.dumps(existing), encoding="utf-8")
+        install_dir.mkdir()
+        skills_dir = tmp_path / ".openclaw" / "skills"
+        skills_dir.mkdir(parents=True)
+        old_target = tmp_path / "old"
+        old_target.mkdir()
+        (skills_dir / "feyagate").symlink_to(old_target)
 
         with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
              patch("pathlib.Path.home", return_value=tmp_path):
             assert _install_openclaw() is True
 
-        # Verify both servers are present
-        config = json.loads(config_path.read_text(encoding="utf-8"))
-        assert "feyagate" in config["mcpServers"]
-        assert "existing" in config["mcpServers"]
+        link = skills_dir / "feyagate"
+        assert link.is_symlink()
+        assert link.resolve() == install_dir.resolve()
 
 
 class TestInstallHermes:
-    """Test Hermes Agent MCP config installation."""
+    """Test Hermes Agent skill symlink installation."""
 
-    def test_missing_binary(self, tmp_path):
-        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(tmp_path)):
+    def test_missing_install_dir(self, tmp_path):
+        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(tmp_path / "nonexistent")):
             assert _install_hermes() is False
 
     def test_successful_install(self, tmp_path):
         install_dir = tmp_path / "feyagate"
-        (install_dir / "bin").mkdir(parents=True)
-        (install_dir / "bin" / "miloco-mcp-server").write_text("#!/bin/sh", encoding="utf-8")
+        install_dir.mkdir()
 
         with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
              patch("pathlib.Path.home", return_value=tmp_path):
             assert _install_hermes() is True
 
-    def test_creates_config_dir(self, tmp_path):
+        link = tmp_path / ".hermes" / "skills" / "feyagate"
+        assert link.is_symlink()
+        assert link.resolve() == install_dir.resolve()
+
+    def test_replaces_existing_symlink(self, tmp_path):
         install_dir = tmp_path / "feyagate"
-        (install_dir / "bin").mkdir(parents=True)
-        (install_dir / "bin" / "miloco-mcp-server").write_text("#!/bin/sh", encoding="utf-8")
+        install_dir.mkdir()
+        skills_dir = tmp_path / ".hermes" / "skills"
+        skills_dir.mkdir(parents=True)
+        old_target = tmp_path / "old"
+        old_target.mkdir()
+        (skills_dir / "feyagate").symlink_to(old_target)
 
-        # Don't create .hermes directory - should be created
         with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
              patch("pathlib.Path.home", return_value=tmp_path):
             assert _install_hermes() is True
 
-        # Verify config directory and file were created
-        hermes_dir = tmp_path / ".hermes"
-        assert hermes_dir.exists()
-        config_path = hermes_dir / "config.yaml"
-        assert config_path.exists()
+        link = skills_dir / "feyagate"
+        assert link.is_symlink()
+        assert link.resolve() == install_dir.resolve()
 
-    def test_existing_config(self, tmp_path):
-        import yaml
+
+class TestInstallWindsurf:
+    """Test Windsurf skill symlink installation."""
+
+    def test_missing_install_dir(self, tmp_path):
+        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(tmp_path / "nonexistent")):
+            assert _install_windsurf() is False
+
+    def test_successful_install(self, tmp_path):
         install_dir = tmp_path / "feyagate"
-        (install_dir / "bin").mkdir(parents=True)
-        (install_dir / "bin" / "miloco-mcp-server").write_text("#!/bin/sh", encoding="utf-8")
-
-        # Create existing config
-        hermes_dir = tmp_path / ".hermes"
-        hermes_dir.mkdir(parents=True)
-        config_path = hermes_dir / "config.yaml"
-        existing = {"model": {"default": "claude-sonnet-4"}, "mcp": {"servers": {"existing": {"url": "http://old:8080/mcp"}}}}
-        config_path.write_text(yaml.dump(existing), encoding="utf-8")
+        install_dir.mkdir()
 
         with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
              patch("pathlib.Path.home", return_value=tmp_path):
-            assert _install_hermes() is True
+            assert _install_windsurf() is True
 
-        # Verify both servers are present
-        config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
-        assert "feyagate" in config["mcp"]["servers"]
-        assert "existing" in config["mcp"]["servers"]
+        link = tmp_path / ".codeium" / "windsurf" / "skills" / "feyagate"
+        assert link.is_symlink()
+        assert link.resolve() == install_dir.resolve()
+
+    def test_replaces_existing_symlink(self, tmp_path):
+        install_dir = tmp_path / "feyagate"
+        install_dir.mkdir()
+        skills_dir = tmp_path / ".codeium" / "windsurf" / "skills"
+        skills_dir.mkdir(parents=True)
+        old_target = tmp_path / "old"
+        old_target.mkdir()
+        (skills_dir / "feyagate").symlink_to(old_target)
+
+        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
+             patch("pathlib.Path.home", return_value=tmp_path):
+            assert _install_windsurf() is True
+
+        link = skills_dir / "feyagate"
+        assert link.is_symlink()
+        assert link.resolve() == install_dir.resolve()
+
+
+class TestInstallCopilot:
+    """Test GitHub Copilot (VS Code) skill symlink installation."""
+
+    def test_missing_install_dir(self, tmp_path):
+        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(tmp_path / "nonexistent")):
+            assert _install_copilot() is False
+
+    def test_successful_install(self, tmp_path):
+        install_dir = tmp_path / "feyagate"
+        install_dir.mkdir()
+
+        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
+             patch("pathlib.Path.home", return_value=tmp_path), \
+             patch("platform.system", return_value="Linux"):
+            assert _install_copilot() is True
+
+        link = tmp_path / ".config" / "Code" / "skills" / "feyagate"
+        assert link.is_symlink()
+        assert link.resolve() == install_dir.resolve()
+
+    def test_replaces_existing_symlink(self, tmp_path):
+        install_dir = tmp_path / "feyagate"
+        install_dir.mkdir()
+        skills_dir = tmp_path / ".config" / "Code" / "skills"
+        skills_dir.mkdir(parents=True)
+        old_target = tmp_path / "old"
+        old_target.mkdir()
+        (skills_dir / "feyagate").symlink_to(old_target)
+
+        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
+             patch("pathlib.Path.home", return_value=tmp_path), \
+             patch("platform.system", return_value="Linux"):
+            assert _install_copilot() is True
+
+        link = skills_dir / "feyagate"
+        assert link.is_symlink()
+        assert link.resolve() == install_dir.resolve()
+
+
+class TestInstallCodex:
+    """Test OpenAI Codex CLI skill symlink installation."""
+
+    def test_missing_install_dir(self, tmp_path):
+        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(tmp_path / "nonexistent")):
+            assert _install_codex() is False
+
+    def test_successful_install(self, tmp_path):
+        install_dir = tmp_path / "feyagate"
+        install_dir.mkdir()
+
+        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
+             patch("pathlib.Path.home", return_value=tmp_path):
+            assert _install_codex() is True
+
+        link = tmp_path / ".codex" / "skills" / "feyagate"
+        assert link.is_symlink()
+        assert link.resolve() == install_dir.resolve()
+
+    def test_replaces_existing_symlink(self, tmp_path):
+        install_dir = tmp_path / "feyagate"
+        install_dir.mkdir()
+        skills_dir = tmp_path / ".codex" / "skills"
+        skills_dir.mkdir(parents=True)
+        old_target = tmp_path / "old"
+        old_target.mkdir()
+        (skills_dir / "feyagate").symlink_to(old_target)
+
+        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
+             patch("pathlib.Path.home", return_value=tmp_path):
+            assert _install_codex() is True
+
+        link = skills_dir / "feyagate"
+        assert link.is_symlink()
+        assert link.resolve() == install_dir.resolve()
 
 
 class TestMain:
@@ -193,23 +295,17 @@ class TestMain:
 
     def test_version_flag(self, monkeypatch):
         """Test --version prints version and exits."""
-        # When --version is passed, argparse's action calls sys.exit
-        # We can't easily mock the action, so just test the parser creation
         import feyagate_skill.cli as cli_mod
-        # Verify the version is set
         assert hasattr(cli_mod, '__version__')
-        assert cli_mod.__version__ == "1.2.2"
+        assert cli_mod.__version__ == "1.2.3"
 
     def test_install_openclaw_command(self, monkeypatch, tmp_path):
         """Test install-openclaw command calls _install_openclaw."""
         import sys
         from unittest.mock import patch
 
-        # Create binary
         install_dir = tmp_path / "feyagate"
-        (install_dir / "bin").mkdir(parents=True)
-        (install_dir / "bin" / "miloco-mcp-server").write_text("#!/bin/sh", encoding="utf-8")
-        (tmp_path / ".openclaw").mkdir(parents=True)
+        install_dir.mkdir()
 
         old_argv = sys.argv
         try:
@@ -218,7 +314,7 @@ class TestMain:
                 try:
                     main()
                 except SystemExit:
-                    pass  # argparse may call sys.exit on some paths
+                    pass
 
                 mock_install.assert_called_once()
         finally:
@@ -229,10 +325,8 @@ class TestMain:
         import sys
         from unittest.mock import patch
 
-        # Create binary
         install_dir = tmp_path / "feyagate"
-        (install_dir / "bin").mkdir(parents=True)
-        (install_dir / "bin" / "miloco-mcp-server").write_text("#!/bin/sh", encoding="utf-8")
+        install_dir.mkdir()
 
         old_argv = sys.argv
         try:

@@ -1,9 +1,12 @@
 ---
 name: feyagate-xiaomi
-description: Xiaomi/Mi Home platform tools for FeyaGate. MIOT device control (get/set properties, execute actions), OAuth authorization, camera P2P streaming with snapshots, XiaoAI speaker TTS/music/voice control. Use when controlling Xiaomi smart home devices, lights, plugs, sensors, cameras, or XiaoAI speakers.
+parent: feyagate
+description: Xiaomi/Mi Home platform tools. MIOT device control, OAuth auth, camera P2P, XiaoAI speaker TTS/music. Use when controlling Xiaomi devices, cameras, or XiaoAI speakers.
 ---
 
 # Xiaomi Platform Tools
+
+> **Parent skill:** [SKILL.md](../SKILL.md) — provides cross-platform tools (`device/list`, `device/specs`, `platform/status`, `gateway/info`) and MCP endpoint config.
 
 ## Device Control
 
@@ -13,7 +16,7 @@ description: Xiaomi/Mi Home platform tools for FeyaGate. MIOT device control (ge
 | `xiaomi/set_property` | `device_id` (string), `siid` (int/string), `piid` (int/string), `value` | Control result |
 | `xiaomi/execute_action` | `device_id` (string), `siid` (int/string), `aiid` (int/string), `params` (opt) | Action result |
 
-**Workflow:**
+**Workflow (step 1-2 use parent skill tools):**
 1. `device/list` with `{"filter": ["keyword"], "platform": "xiaomi"}` → find target device
 2. `device/specs` with `{"deviceId": "xxx"}` → get `siid`/`piid`/`aiid` definitions
 3. `xiaomi/get_properties` → read current values
