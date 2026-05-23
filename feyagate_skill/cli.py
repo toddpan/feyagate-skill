@@ -1,22 +1,30 @@
 """FeyaGate Skill CLI - Main entry point."""
 
 import argparse
-import json
 import os
+import platform as _platform
 import sys
 from pathlib import Path
 
 from . import __version__, DEFAULT_INSTALL_DIR, MCP_DEFAULT_PORT
 
 
-def _install_claude():
-    """Install FeyaGate skill for Claude Code via symlink."""
+def _install_skill(skills_dir, agent_name):
+    """Create skill symlink for an AI agent.
+
+    Args:
+        skills_dir: Path to the agent's skills directory.
+        agent_name: Display name for the agent (used in output messages).
+
+    Returns:
+        True on success, False on failure.
+    """
     install_dir = Path(os.path.expanduser(DEFAULT_INSTALL_DIR))
     if not install_dir.exists():
         print("ERROR: FeyaGate not installed. Run: feyagate setup")
         return False
 
-    skills_dir = Path.home() / ".claude" / "skills"
+    skills_dir = Path(skills_dir)
     link = skills_dir / "feyagate"
 
     try:
@@ -26,128 +34,36 @@ def _install_claude():
             link.unlink()
 
         link.symlink_to(install_dir)
-        print(f"Installed: {link} -> {install_dir}")
+        print(f"Skill installed: {link} -> {install_dir}")
         print()
-        print("Restart Claude Code to load the skill.")
+        print(f"Restart {agent_name} to load the skill.")
         return True
     except OSError as exc:
         print(f"ERROR: Failed to create symlink: {exc}")
         return False
+
+
+def _install_claude():
+    return _install_skill(Path.home() / ".claude" / "skills", "Claude Code")
 
 
 def _install_cursor():
-    """Install FeyaGate skill commands for Cursor via symlink."""
-    install_dir = Path(os.path.expanduser(DEFAULT_INSTALL_DIR))
-    if not install_dir.exists():
-        print("ERROR: FeyaGate not installed. Run: feyagate setup")
-        return False
-
-    skills_dir = Path.home() / ".cursor" / "skills"
-    link = skills_dir / "feyagate"
-
-    try:
-        skills_dir.mkdir(parents=True, exist_ok=True)
-
-        if link.is_symlink() or link.exists():
-            link.unlink()
-
-        link.symlink_to(install_dir)
-        print(f"Installed: {link} -> {install_dir}")
-        print()
-        print("Restart Cursor to load the skill.")
-        return True
-    except OSError as exc:
-        print(f"ERROR: Failed to create symlink: {exc}")
-        return False
+    return _install_skill(Path.home() / ".cursor" / "skills", "Cursor")
 
 
 def _install_openclaw():
-    """Install FeyaGate skill commands for OpenClaw via symlink."""
-    install_dir = Path(os.path.expanduser(DEFAULT_INSTALL_DIR))
-    if not install_dir.exists():
-        print("ERROR: FeyaGate not installed. Run: feyagate setup")
-        return False
-
-    skills_dir = Path.home() / ".openclaw" / "skills"
-    link = skills_dir / "feyagate"
-
-    try:
-        skills_dir.mkdir(parents=True, exist_ok=True)
-
-        if link.is_symlink() or link.exists():
-            link.unlink()
-
-        link.symlink_to(install_dir)
-        print(f"Installed: {link} -> {install_dir}")
-        print()
-        print("Restart OpenClaw to load the skill.")
-        return True
-    except OSError as exc:
-        print(f"ERROR: Failed to create symlink: {exc}")
-        return False
+    return _install_skill(Path.home() / ".openclaw" / "skills", "OpenClaw")
 
 
 def _install_hermes():
-    """Install FeyaGate skill commands for Hermes Agent via symlink."""
-    install_dir = Path(os.path.expanduser(DEFAULT_INSTALL_DIR))
-    if not install_dir.exists():
-        print("ERROR: FeyaGate not installed. Run: feyagate setup")
-        return False
-
-    skills_dir = Path.home() / ".hermes" / "skills"
-    link = skills_dir / "feyagate"
-
-    try:
-        skills_dir.mkdir(parents=True, exist_ok=True)
-
-        if link.is_symlink() or link.exists():
-            link.unlink()
-
-        link.symlink_to(install_dir)
-        print(f"Installed: {link} -> {install_dir}")
-        print()
-        print("Hermes Agent loads skills automatically.")
-        return True
-    except OSError as exc:
-        print(f"ERROR: Failed to create symlink: {exc}")
-        return False
+    return _install_skill(Path.home() / ".hermes" / "skills", "Hermes Agent")
 
 
 def _install_windsurf():
-    """Install FeyaGate skill commands for Windsurf via symlink."""
-    install_dir = Path(os.path.expanduser(DEFAULT_INSTALL_DIR))
-    if not install_dir.exists():
-        print("ERROR: FeyaGate not installed. Run: feyagate setup")
-        return False
-
-    skills_dir = Path.home() / ".codeium" / "windsurf" / "skills"
-    link = skills_dir / "feyagate"
-
-    try:
-        skills_dir.mkdir(parents=True, exist_ok=True)
-
-        if link.is_symlink() or link.exists():
-            link.unlink()
-
-        link.symlink_to(install_dir)
-        print(f"Installed: {link} -> {install_dir}")
-        print()
-        print("Restart Windsurf to load the skill.")
-        return True
-    except OSError as exc:
-        print(f"ERROR: Failed to create symlink: {exc}")
-        return False
+    return _install_skill(Path.home() / ".codeium" / "windsurf" / "skills", "Windsurf")
 
 
 def _install_copilot():
-    """Install FeyaGate skill commands for GitHub Copilot (VS Code) via symlink."""
-    install_dir = Path(os.path.expanduser(DEFAULT_INSTALL_DIR))
-    if not install_dir.exists():
-        print("ERROR: FeyaGate not installed. Run: feyagate setup")
-        return False
-
-    # VS Code user data directory varies by OS
-    import platform as _platform
     system = _platform.system()
     if system == "Darwin":
         vscode_dir = Path.home() / "Library" / "Application Support" / "Code"
@@ -155,50 +71,11 @@ def _install_copilot():
         vscode_dir = Path.home() / "AppData" / "Roaming" / "Code"
     else:
         vscode_dir = Path.home() / ".config" / "Code"
-
-    skills_dir = vscode_dir / "skills"
-    link = skills_dir / "feyagate"
-
-    try:
-        skills_dir.mkdir(parents=True, exist_ok=True)
-
-        if link.is_symlink() or link.exists():
-            link.unlink()
-
-        link.symlink_to(install_dir)
-        print(f"Installed: {link} -> {install_dir}")
-        print()
-        print("Restart VS Code to load the skill.")
-        return True
-    except OSError as exc:
-        print(f"ERROR: Failed to create symlink: {exc}")
-        return False
+    return _install_skill(vscode_dir / "skills", "VS Code")
 
 
 def _install_codex():
-    """Install FeyaGate skill commands for OpenAI Codex CLI via symlink."""
-    install_dir = Path(os.path.expanduser(DEFAULT_INSTALL_DIR))
-    if not install_dir.exists():
-        print("ERROR: FeyaGate not installed. Run: feyagate setup")
-        return False
-
-    skills_dir = Path.home() / ".codex" / "skills"
-    link = skills_dir / "feyagate"
-
-    try:
-        skills_dir.mkdir(parents=True, exist_ok=True)
-
-        if link.is_symlink() or link.exists():
-            link.unlink()
-
-        link.symlink_to(install_dir)
-        print(f"Installed: {link} -> {install_dir}")
-        print()
-        print("Restart Codex CLI to load the skill.")
-        return True
-    except OSError as exc:
-        print(f"ERROR: Failed to create symlink: {exc}")
-        return False
+    return _install_skill(Path.home() / ".codex" / "skills", "Codex CLI")
 
 
 def main():

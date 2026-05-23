@@ -26,6 +26,17 @@ sub_skills:
 
 MCP-based multi-platform smart home gateway supporting Xiaomi, Tuya, Midea, eWeLink, Serial, and GPIO. Compatible with OpenClaw, Claude Code, Hermes, Codex, Windsurf, Copilot, 小智AI and other MCP-compatible AI agents.
 
+## Before Using Any Tool
+
+Run this check **before** calling any FeyaGate MCP tool:
+
+```bash
+feyagate status
+```
+
+- If status is **RUNNING** → proceed with tool calls.
+- If status is **STOPPED** or command not found → run `feyagate start` first. If `feyagate` is not installed, run `pip install feyagate-skill && feyagate setup && feyagate start`.
+
 **Dual API endpoints:**
 
 | Endpoint | Protocol | URL |

@@ -55,7 +55,7 @@ Service URL: `http://localhost:38080/mcp/http`. Custom port: `feyagate start --p
 
 ## Step 3: Install as AI Agent Skill [ASK]
 
-> **IMPORTANT:** This step registers FeyaGate with the AI agent you are currently running in.
+> **IMPORTANT:** This step installs the FeyaGate skill (SKILL.md + sub-skills) for the AI agent you are currently running in.
 > Ask the user: "Which AI agent should I install for?" or detect from the environment.
 
 ```bash

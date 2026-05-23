@@ -383,6 +383,7 @@ def do_setup(install_dir=None):
     print()
     print("Next steps:")
     print(f"  1. feyagate start          # Start MCP server")
-    print(f"  2. feyagate auth           # Authorize Xiaomi account")
-    print(f"  3. feyagate status         # Check server status")
+    print(f"  2. feyagate install-claude # Install for Claude Code")
+    print(f"  3. feyagate auth           # Authorize Xiaomi account")
+    print(f"  4. feyagate status         # Check server status")
     return True
