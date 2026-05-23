@@ -57,8 +57,6 @@ feyagate install-claude          # Step 3: Register with your AI agent
 feyagate auth                    # Step 4: Authorize smart home platform
 ```
 
-> **Linux** may need system deps first: `sudo apt-get install -y libfmt8 libmosquitto1 libyaml-cpp0.7`
-
 Other agent install commands: `install-cursor`, `install-openclaw`, `install-hermes`, `install-codex`, `install-windsurf`, `install-copilot`
 
 Full step-by-step guide: [QUICKSTART.md](QUICKSTART.md)
@@ -165,10 +163,9 @@ xiaozhi:
 | `FeyaGate not installed` | `feyagate setup` |
 | `connection refused` | `feyagate start` |
 | `authorized: false` | `feyagate auth` (Xiaomi) or use platform-specific auth tool |
-| `cannot open shared object file` | `sudo apt-get install -y libfmt8 libmosquitto1 libyaml-cpp0.7` (Linux) |
+| `cannot open shared object file` | `feyagate upgrade` or re-run `feyagate setup` |
 | `Tool not found` | Check tool name (see `tools/list` output) |
 | `key 'device_id' not found` | Platform tools use `device_id`; cross-platform `device/specs` uses `deviceId` |
 | `license_required` error | Set license key via `license/set` tool |
-| Library load error | `ldd ~/.feyagate/bin/miloco-mcp-server \| grep "not found"` |
 
 Full API reference: [FeyaGate_MCP_API.md](FeyaGate_MCP_API.md), [FeyaGate_HTTP_API.md](FeyaGate_HTTP_API.md)

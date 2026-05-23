@@ -10,10 +10,26 @@
 - Python 3.9+
 - Internet access (for downloading MCP server binary ~30MB)
 
+## One-Line Install [AUTO]
+
+**macOS / Linux** — installs the Python package and MCP server binary in one step:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.sh | bash
+```
+
+**Windows (PowerShell):**
+
+```powershell
+iwr -useb https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.ps1 | iex
+```
+
+After one-line install, skip to **Step 3** (install agent skill). If you prefer manual steps, continue below.
+
 ## Step 1: Install [AUTO]
 
 ```bash
-pip install feyagate-skill
+pip install --force-reinstall feyagate-skill
 ```
 
 Verify:
@@ -31,13 +47,6 @@ feyagate setup
 ```
 
 Default directory: `~/.feyagate`. Customize with `feyagate setup --dir ~/my-feyagate`.
-
-> **Linux only:** If on Linux, install system dependencies before starting:
-> ```bash
-> sudo apt-get install -y libfmt8 libmosquitto1 libyaml-cpp0.7
-> ldd ~/.feyagate/bin/miloco-mcp-server | grep "not found"  # no output = OK
-> ```
-> macOS and Windows users skip this.
 
 Start the service:
 
@@ -264,11 +273,10 @@ curl -s -X POST http://localhost:38080/mcp/http \
 | `FeyaGate not installed` | `feyagate setup` |
 | `connection refused` | `feyagate start` |
 | `authorized: false` | `feyagate auth` |
-| `cannot open shared object file` | `sudo apt-get install -y libfmt8 libmosquitto1 libyaml-cpp0.7` (Linux) |
+| `cannot open shared object file` | `feyagate upgrade` or re-run `feyagate setup` |
 | `Tool not found` | Check tool name with `tools/list` |
 | `key 'device_id' not found` | `device/specs` uses `deviceId`; platform tools use `device_id` |
 | `camera_connect` fails | Check camera native libraries in `lib/` |
 | No frame data | Wait 3-5 seconds, check `xiaomi/camera_status` |
-| Library load failure | `ldd ~/.feyagate/bin/miloco-mcp-server \| grep "not found"` |
 
 For full API reference, see [SKILL.md](SKILL.md), [FeyaGate_MCP_API.md](FeyaGate_MCP_API.md), and [FeyaGate_HTTP_API.md](FeyaGate_HTTP_API.md).

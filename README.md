@@ -24,49 +24,80 @@
 - **Memory system** — persistent notes and long-term memory for AI agents
 - **8 AI agents supported** — Claude Code, Cursor, OpenClaw, Hermes, Codex, Windsurf, Copilot, 小智AI
 
-## Install — 4 Steps
+## Quick Start
+
+**What you need:** A Mac, Linux, or Windows PC · Python 3.9+ · Terminal (Mac/Linux) or PowerShell (Windows)
+
+### Option 1 — Let your AI install it (easiest)
+
+Copy this into Claude, Cursor, or any AI assistant:
 
 ```
-pip install feyagate-skill  →  feyagate setup  →  feyagate start  →  feyagate install-<agent>
+Please read https://github.com/toddpan/feyagate-skill/blob/main/QUICKSTART.md and follow the instructions to install and set up FeyaGate Skill on my machine.
 ```
 
-Then authorize your smart home account:
+### Option 2 — One command (recommended)
+
+Copy the **entire line** below, paste into Terminal, press Enter, and wait a few minutes. The script installs everything and starts the service automatically.
+
+**Mac / Linux** — open **Terminal** (Spotlight: type `Terminal`):
 
 ```bash
-feyagate auth                 # Xiaomi OAuth (interactive)
+curl -fsSL https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.sh | bash
 ```
 
-> **Linux** may need system deps first: `sudo apt-get install -y libfmt8 libmosquitto1 libyaml-cpp0.7`
+**Windows** — open **PowerShell**, paste and run:
 
-## Connect to Your AI Agent
+```powershell
+iwr -useb https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.ps1 | iex
+```
 
-One command per agent. Run this **before** authorizing platforms. Restart the agent after install.
+> No Python yet? Install from [python.org](https://www.python.org/downloads/) and check **Add Python to PATH** on Windows.
 
-| Agent | Command |
-|:------|:--------|
-| Claude Code | `feyagate install-claude` |
+### After install — 3 steps
+
+| Step | What to do | Command |
+|:-----|:-----------|:--------|
+| **1** | Connect your AI assistant | See table below, e.g. `feyagate install-cursor` |
+| **2** | Sign in to Mi Home (Xiaomi) | `feyagate auth` |
+| **3** | Confirm it's running | `feyagate status` |
+
+Then **restart your AI assistant** and try: *"List my smart home devices."*
+
+- **Web dashboard:** [http://localhost:38080](http://localhost:38080)
+- **Stuck?** See [QUICKSTART.md](QUICKSTART.md) troubleshooting
+
+| Your AI assistant | Run this command |
+|:------------------|:-----------------|
 | Cursor | `feyagate install-cursor` |
+| Claude Code | `feyagate install-claude` |
 | OpenClaw | `feyagate install-openclaw` |
-| Hermes | `feyagate install-hermes` |
 | Codex | `feyagate install-codex` |
 | Windsurf | `feyagate install-windsurf` |
-| Copilot | `feyagate install-copilot` |
+| Copilot (VS Code) | `feyagate install-copilot` |
+| Hermes | `feyagate install-hermes` |
+
+### Option 3 — Manual install
+
+For users who prefer running commands step by step:
+
+```bash
+pip install feyagate-skill    # 1. Install the feyagate tool
+feyagate setup              # 2. Download the gateway program (~30MB)
+feyagate start              # 3. Start the service
+feyagate install-cursor     # 4. Connect your AI assistant (pick one)
+feyagate auth               # 5. Sign in to Mi Home
+```
 
 ## CLI Commands
 
 | Action | Command |
 |:-------|:--------|
-| Install binary | `feyagate setup [--dir PATH]` |
-| Start | `feyagate start [--port PORT]` |
-| Stop | `feyagate stop` |
-| Restart | `feyagate restart [--port PORT]` |
-| Status | `feyagate status` |
-| Logs | `feyagate log [-n 50]` |
-| Auth Xiaomi | `feyagate auth [--status] [--code CODE]` |
-| Camera snapshot | `feyagate snapshot --list` / `--camera-id DID --connect --count 3` |
-| Scheduled analysis | `feyagate scheduled --camera-id DID --interval 300 --auto-connect` |
-| Upgrade server | `feyagate upgrade` |
-| Upgrade package | `pip install --upgrade feyagate-skill` |
+| Install gateway | `feyagate setup` |
+| Start / stop | `feyagate start` · `feyagate stop` |
+| Status / logs | `feyagate status` · `feyagate log` |
+| Mi Home login | `feyagate auth` |
+| Upgrade | `feyagate upgrade` or `pip install --upgrade feyagate-skill` |
 
 ## MCP Tools at a Glance
 
@@ -74,20 +105,13 @@ One command per agent. Run this **before** authorizing platforms. Restart the ag
 |:---------|:------|
 | **Device Discovery** | `device/list` `device/specs` `platform/status` `gateway/info` |
 | **Xiaomi** | `xiaomi/get_properties` `xiaomi/set_property` `xiaomi/execute_action` |
-| **Xiaomi Auth** | `xiaomi/auth_url` `xiaomi/auth_callback` `xiaomi/auth_status` |
 | **Xiao AI Speaker** | `xiaoai/tts` `xiaoai/play_music` `xiaoai/control` |
-| **Camera** | `xiaomi/camera_list` `xiaomi/camera_connect` `xiaomi/camera_snapshot` `xiaomi/camera_vision_chat` |
-| **Tuya** | `tuya/get_properties` `tuya/set_property` `auth/tuya_qr` |
-| **Midea** | `midea/get_properties` `midea/set_property` `midea/execute_action` `auth/midea_login` |
-| **eWeLink** | `ewelink/get_properties` `ewelink/set_property` `ewelink/execute_action` `auth/ewelink_login` |
-| **Scenes** | `scene/list` `scene/trigger` |
-| **Rooms** | `room/list` `room/set_device` |
-| **Schedule** | `schedule/add` `schedule/list` `schedule/get` `schedule/update` `schedule/delete` |
-| **Trigger** | `trigger/create` `trigger/list` `trigger/toggle` `trigger/logs` |
-| **Memory** | `memory/read` `memory/add` `memory/search` `memory/note` `memory/today` |
-| **Serial / GPIO** | `serial/*` `gpio/*` |
+| **Camera** | `xiaomi/camera_list` `xiaomi/camera_connect` `xiaomi/camera_snapshot` |
+| **Tuya / Midea / eWeLink** | Platform tools + `auth/*` login helpers |
+| **Scenes / Rooms / Schedule** | `scene/*` `room/*` `schedule/*` `trigger/*` |
+| **Memory** | `memory/read` `memory/add` `memory/search` |
 
-> Full API docs: [SKILL.md](SKILL.md) | [QUICKSTART.md](QUICKSTART.md)
+> Full API: [SKILL.md](SKILL.md) · [QUICKSTART.md](QUICKSTART.md)
 
 ## How It Works
 
@@ -96,16 +120,6 @@ One command per agent. Run this **before** authorizing platforms. Restart the ag
 │  AI Agent   │ ◄──────────────────► │  feyagate server  │ ◄──────────────────► │  IoT     │
 │ (Claude etc)│   localhost:38080     │  (miloco-mcp)     │                      │  Devices │
 └─────────────┘                       └──────────────────┘                      └──────────┘
-```
-
-AI agents call MCP tools → FeyaGate translates to platform-specific protocols → devices respond.
-
-## Let AI Install For You
-
-Copy-paste this prompt to your AI assistant:
-
-```
-Please read https://github.com/toddpan/feyagate-skill/blob/main/QUICKSTART.md and follow the instructions to install and set up FeyaGate Skill on my machine.
 ```
 
 ## License
@@ -118,96 +132,108 @@ MIT License
 
 ## 功能特点
 
-- **多平台 IoT 控制** — 小米/米家、涂鸦 Tuya、美的 Midea、eWeLink、串口、GPIO
-- **摄像头 P2P 实时监控** — 抓拍、AI 视觉分析
-- **小爱音箱控制** — TTS 语音播报、音乐播放、语音指令
-- **自动化** — 定时任务、触发引擎、房间管理
-- **记忆系统** — 持久化笔记和长期记忆
-- **支持 8 款 AI 助手** — Claude Code、Cursor、OpenClaw、Hermes、Codex、Windsurf、Copilot、小智AI
+- **多平台智能家居** — 小米/米家、涂鸦、美的、易微联、串口、GPIO
+- **摄像头** — 实时抓拍、AI 视觉分析
+- **小爱音箱** — 语音播报、放音乐、语音控制
+- **自动化** — 定时任务、触发器、房间管理
+- **记忆** — AI 可记住你的习惯和笔记
+- **支持 8 款 AI 助手** — Cursor、Claude Code、OpenClaw、Codex、Windsurf、Copilot、Hermes、小智AI
 
-## 安装 — 4 步
+## 快速开始
+
+**准备：** 一台 Mac / Linux / Windows 电脑 · 已安装 [Python 3.9+](https://www.python.org/downloads/) · 能打开「终端」或 PowerShell
+
+### 方式一：让 AI 帮你装（最省心）
+
+把下面这段话复制发给 Cursor、Claude 等 AI 助手，它会按步骤帮你装好：
 
 ```
-pip install feyagate-skill  →  feyagate setup  →  feyagate start  →  feyagate install-<agent>
+请阅读 https://github.com/toddpan/feyagate-skill/blob/main/QUICKSTART.md 并按照指南在我的机器上安装和配置 FeyaGate Skill。
 ```
 
-然后授权你的智能家居账号：
+### 方式二：一条命令自动安装（推荐）
+
+**复制下面整行**，粘贴到终端里按回车，等几分钟即可。脚本会自动：安装工具 → 下载网关程序 → 启动服务。
+
+**Mac / Linux** — 打开「**终端**」（Mac 可按 `Command + 空格`，搜索「终端」）：
 
 ```bash
-feyagate auth                 # 小米 OAuth 授权（交互式）
+curl -fsSL https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.sh | bash
 ```
 
-> **Linux** 可能需要先装系统依赖：`sudo apt-get install -y libfmt8 libmosquitto1 libyaml-cpp0.7`
+**Windows** — 打开「**PowerShell**」（开始菜单搜索 PowerShell）：
 
-## 接入 AI 助手
+```powershell
+iwr -useb https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.ps1 | iex
+```
 
-一条命令搞定，**在授权平台之前**运行。装完重启 AI 助手即可。
+> 还没有 Python？到 [python.org](https://www.python.org/downloads/) 下载安装；Windows 安装时务必勾选 **Add Python to PATH**。
 
-| AI 助手 | 命令 |
-|:--------|:-----|
-| Claude Code | `feyagate install-claude` |
+### 装好之后，再做 3 件事
+
+| 步骤 | 要做什么 | 命令 |
+|:-----|:---------|:-----|
+| **1** | 让 AI 助手认识 FeyaGate | 见下表，例如 `feyagate install-cursor` |
+| **2** | 登录小米/米家账号 | `feyagate auth` |
+| **3** | 确认服务已启动 | `feyagate status` |
+
+完成后 **重启你的 AI 助手**，试着说：「列出我家的智能设备」。
+
+- **网页管理：** 浏览器打开 [http://localhost:38080](http://localhost:38080)
+- **遇到问题？** 查看 [QUICKSTART.md](QUICKSTART.md) 故障排除
+
+| 你用的 AI 助手 | 运行这条命令 |
+|:---------------|:-------------|
 | Cursor | `feyagate install-cursor` |
+| Claude Code | `feyagate install-claude` |
 | OpenClaw | `feyagate install-openclaw` |
-| Hermes | `feyagate install-hermes` |
 | Codex | `feyagate install-codex` |
 | Windsurf | `feyagate install-windsurf` |
-| Copilot | `feyagate install-copilot` |
+| Copilot（VS Code） | `feyagate install-copilot` |
+| Hermes | `feyagate install-hermes` |
 
-## 命令速查
+### 方式三：手动安装（熟悉命令行可选）
 
-| 操作 | 命令 |
-|:-----|:-----|
-| 安装二进制 | `feyagate setup [--dir PATH]` |
-| 启动 | `feyagate start [--port PORT]` |
-| 停止 | `feyagate stop` |
-| 重启 | `feyagate restart [--port PORT]` |
-| 状态 | `feyagate status` |
-| 日志 | `feyagate log [-n 50]` |
-| 小米授权 | `feyagate auth [--status] [--code CODE]` |
-| 摄像头抓拍 | `feyagate snapshot --list` / `--camera-id DID --connect --count 3` |
-| 定时分析 | `feyagate scheduled --camera-id DID --interval 300 --auto-connect` |
-| 升级服务器 | `feyagate upgrade` |
-| 升级包 | `pip install --upgrade feyagate-skill` |
+```bash
+pip install feyagate-skill    # 1. 安装 feyagate 命令行工具
+feyagate setup              # 2. 下载网关程序（约 30MB，需联网）
+feyagate start              # 3. 启动服务
+feyagate install-cursor     # 4. 接入 AI 助手（按上表选一个）
+feyagate auth               # 5. 登录小米账号
+```
+
+## 常用命令
+
+| 想做什么 | 命令 |
+|:---------|:-----|
+| 下载/更新网关程序 | `feyagate setup` |
+| 启动 / 停止 | `feyagate start` · `feyagate stop` |
+| 查看状态 / 日志 | `feyagate status` · `feyagate log` |
+| 登录米家 | `feyagate auth` |
+| 升级 | `feyagate upgrade` 或 `pip install --upgrade feyagate-skill` |
 
 ## MCP 工具一览
 
 | 类别 | 工具 |
 |:-----|:-----|
-| **设备发现** | `device/list` `device/specs` `platform/status` `gateway/info` |
-| **小米控制** | `xiaomi/get_properties` `xiaomi/set_property` `xiaomi/execute_action` |
-| **小米授权** | `xiaomi/auth_url` `xiaomi/auth_callback` `xiaomi/auth_status` |
-| **小爱音箱** | `xiaoai/tts` `xiaoai/play_music` `xiaoai/control` |
-| **摄像头** | `xiaomi/camera_list` `xiaomi/camera_connect` `xiaomi/camera_snapshot` `xiaomi/camera_vision_chat` |
-| **涂鸦** | `tuya/get_properties` `tuya/set_property` `auth/tuya_qr` |
-| **美的** | `midea/get_properties` `midea/set_property` `midea/execute_action` `auth/midea_login` |
-| **易微联** | `ewelink/get_properties` `ewelink/set_property` `ewelink/execute_action` `auth/ewelink_login` |
-| **场景** | `scene/list` `scene/trigger` |
-| **房间** | `room/list` `room/set_device` |
-| **定时** | `schedule/add` `schedule/list` `schedule/get` `schedule/update` `schedule/delete` |
-| **触发器** | `trigger/create` `trigger/list` `trigger/toggle` `trigger/logs` |
-| **记忆** | `memory/read` `memory/add` `memory/search` `memory/note` `memory/today` |
-| **串口 / GPIO** | `serial/*` `gpio/*` |
+| **查设备** | `device/list` `device/specs` |
+| **小米控制** | `xiaomi/get_properties` `xiaomi/set_property` |
+| **小爱音箱** | `xiaoai/tts` `xiaoai/play_music` |
+| **摄像头** | `xiaomi/camera_snapshot` 等 |
+| **涂鸦 / 美的 / 易微联** | 各平台控制 + `auth/*` 登录 |
+| **场景 / 房间 / 定时** | `scene/*` `room/*` `schedule/*` |
 
-> 完整文档：[SKILL.md](SKILL.md) | [QUICKSTART.md](QUICKSTART.md)
 
 ## 工作原理
 
 ```
-┌─────────────┐     MCP 协议       ┌──────────────────┐    MIOT/DP 等     ┌──────────┐
-│  AI 助手    │ ◄───────────────► │  feyagate 服务器  │ ◄───────────────► │  IoT     │
-│ (Claude 等) │  localhost:38080  │  (miloco-mcp)     │                   │  设备    │
+┌─────────────┐     MCP 协议       ┌──────────────────┐    各平台协议     ┌──────────┐
+│  AI 助手    │ ◄───────────────► │  FeyaGate 网关   │ ◄───────────────► │ 智能设备 │
+│ (Cursor 等) │  本机 38080 端口   │                  │                   │ 灯/空调等 │
 └─────────────┘                    └──────────────────┘                   └──────────┘
 ```
 
-AI 助手调用 MCP 工具 → FeyaGate 翻译为各平台协议 → 设备响应。
-
-## 让 AI 帮你安装
-
-复制以下提示词发给你的 AI 助手：
-
-```
-请阅读 https://github.com/toddpan/feyagate-skill/blob/main/QUICKSTART.md 并按照指南在我的机器上安装和配置 FeyaGate Skill。
-```
+你对 AI 说「开灯」→ AI 调用 FeyaGate → 设备执行。
 
 ## 许可证
 
