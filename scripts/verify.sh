@@ -63,7 +63,7 @@ if [ "$(uname -s)" = "Linux" ]; then
         echo ""
         echo "[WARN] Missing shared libraries:"
         echo "$MISSING" | sed 's/^/       /'
-        echo "       Fix: sudo apt-get install -y libfmt8 libmosquitto1 libyaml-cpp0.7"
+        echo "       Fix: feyagate upgrade  (or re-run feyagate setup)"
         ERRORS=$((ERRORS + 1))
     else
         echo "[OK] Shared library dependencies satisfied"
