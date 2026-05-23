@@ -41,9 +41,9 @@ MCP-based multi-platform smart home gateway supporting Xiaomi, Tuya, Midea, eWeL
 ```bash
 pip install feyagate-skill       # Step 1: Install Python package
 feyagate setup                   # Step 2: Download MCP server binary (~30MB)
-feyagate start                   # Step 3: Start service (localhost:38080)
-feyagate install-claude          # Step 4: Register with your AI agent
-feyagate auth                    # Step 5: Authorize smart home platform
+feyagate start                   #        Start service (localhost:38080)
+feyagate install-claude          # Step 3: Register with your AI agent
+feyagate auth                    # Step 4: Authorize smart home platform
 ```
 
 > **Linux** may need system deps first: `sudo apt-get install -y libfmt8 libmosquitto1 libyaml-cpp0.7`

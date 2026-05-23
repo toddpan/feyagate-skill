@@ -1,7 +1,7 @@
 # FeyaGate Skill — Quick Start Guide
 
 > **For AI Assistants (OpenClaw, Claude Code, Hermes, Codex, Windsurf, Copilot, 小智AI, Cursor):**
-> Follow Steps 1-6 sequentially. Report progress at each step. Do NOT skip steps.
+> Follow Steps 1-4 sequentially. Report progress at each step. Do NOT skip steps.
 > Steps marked with **[AUTO]** can be executed without asking the user.
 > Steps marked with **[ASK]** require user input before proceeding.
 
@@ -22,7 +22,7 @@ Verify:
 feyagate --version
 ```
 
-## Step 2: Setup MCP Server [AUTO]
+## Step 2: Setup & Start [AUTO]
 
 Download and install the MCP server binary (may take 1-2 minutes):
 
@@ -32,21 +32,14 @@ feyagate setup
 
 Default directory: `~/.feyagate`. Customize with `feyagate setup --dir ~/my-feyagate`.
 
-## Step 3: Install System Dependencies (Linux only) [AUTO]
+> **Linux only:** If on Linux, install system dependencies before starting:
+> ```bash
+> sudo apt-get install -y libfmt8 libmosquitto1 libyaml-cpp0.7
+> ldd ~/.feyagate/bin/miloco-mcp-server | grep "not found"  # no output = OK
+> ```
+> macOS and Windows users skip this.
 
-> Skip this step on macOS / Windows.
-
-```bash
-sudo apt-get install -y libfmt8 libmosquitto1 libyaml-cpp0.7
-```
-
-Verify (no output = OK):
-
-```bash
-ldd ~/.feyagate/bin/miloco-mcp-server | grep "not found"
-```
-
-## Step 4: Start the Service [AUTO]
+Start the service:
 
 ```bash
 feyagate start
@@ -60,7 +53,7 @@ feyagate status
 
 Service URL: `http://localhost:38080/mcp/http`. Custom port: `feyagate start --port 9090`.
 
-## Step 5: Install as AI Agent Skill [ASK]
+## Step 3: Install as AI Agent Skill [ASK]
 
 > **IMPORTANT:** This step registers FeyaGate with the AI agent you are currently running in.
 > Ask the user: "Which AI agent should I install for?" or detect from the environment.
@@ -77,7 +70,7 @@ feyagate install-codex      # OpenAI Codex CLI
 
 After install, **restart the AI agent** to load the skill.
 
-## Step 6: Authorize Smart Home Platform [ASK]
+## Step 4: Authorize Smart Home Platform [ASK]
 
 > Ask the user which platform(s) they want to authorize.
 
@@ -132,7 +125,7 @@ curl -s -X POST http://localhost:38080/mcp/http \
 
 ## Setup Complete
 
-After completing Steps 1-6, the user can control smart home devices through their AI agent.
+After completing Steps 1-4, the user can control smart home devices through their AI agent.
 The AI agent will automatically use the MCP tools (e.g. `device/list`, `device/specs`, `xiaomi/set_property`).
 
 ---
