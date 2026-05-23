@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "feyagate-skill"
-version = "1.2.3"
+version = "1.2.4"
 description = "MCP Smart Home Gateway for AI Agents - Control Xiaomi, Tuya, Midea, eWeLink devices via MCP protocol"
 readme = "README.md"
 license = {text = "MIT"}
