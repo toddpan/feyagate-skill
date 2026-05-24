@@ -26,19 +26,11 @@
 
 ## Quick Start
 
-**What you need:** A Mac, Linux, or Windows PC · Python 3.9+ · Terminal (Mac/Linux) or PowerShell (Windows)
+**Prerequisites:** Mac / Linux / Windows · Python 3.9+ · Terminal or PowerShell
 
-### Option 1 — Let your AI install it (easiest)
+### Option 1 — One command (recommended)
 
-Copy this into Claude, Cursor, or any AI assistant:
-
-```
-Please read https://github.com/toddpan/feyagate-skill/blob/main/QUICKSTART.md and follow the instructions to install and set up FeyaGate Skill on my machine.
-```
-
-### Option 2 — One command (recommended)
-
-Copy the **entire line** below, paste into Terminal, press Enter, and wait a few minutes. The script installs everything and starts the service automatically.
+Copy the **entire line** below, paste into Terminal, press Enter, and wait a few minutes:
 
 **Mac / Linux** — open **Terminal** (Spotlight: type `Terminal`):
 
@@ -54,18 +46,32 @@ iwr -useb https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/
 
 > No Python yet? Install from [python.org](https://www.python.org/downloads/) and check **Add Python to PATH** on Windows.
 
-### After install — 3 steps
+> **Let AI do it for you?** Send this to Claude, Cursor, or any AI assistant:
+> `Please read https://github.com/toddpan/feyagate-skill/blob/main/QUICKSTART.md and follow the instructions to install and set up FeyaGate Skill on my machine.`
 
-| Step | What to do | Command |
-|:-----|:-----------|:--------|
-| **1** | Connect your AI assistant | See table below, e.g. `feyagate install-cursor` |
-| **2** | Sign in to Mi Home (Xiaomi) | `feyagate auth` |
-| **3** | Confirm it's running | `feyagate status` |
+### Option 2 — Install from PyPI (step by step)
 
-Then **restart your AI assistant** and try: *"List my smart home devices."*
+```bash
+pip install feyagate-skill    # 1. Install the CLI tool
+feyagate setup              # 2. Download the gateway binary (~30MB)
+feyagate start              # 3. Start the service
+feyagate install-cursor     # 4. Connect your AI assistant (pick one)
+feyagate auth               # 5. Sign in to Mi Home
+```
 
-- **Web dashboard:** [http://localhost:38080](http://localhost:38080)
-- **Stuck?** See [QUICKSTART.md](QUICKSTART.md) troubleshooting
+### Option 3 — Install from source (developers)
+
+```bash
+git clone https://github.com/toddpan/feyagate-skill.git
+cd feyagate-skill
+pip install -e ".[dev]"     # Editable install with dev dependencies (pytest, etc.)
+feyagate setup
+feyagate start
+feyagate install-cursor     # or install-claude, install-hermes, etc.
+feyagate auth
+```
+
+### After install — connect your AI assistant
 
 | Your AI assistant | Run this command |
 |:------------------|:-----------------|
@@ -77,17 +83,10 @@ Then **restart your AI assistant** and try: *"List my smart home devices."*
 | Copilot (VS Code) | `feyagate install-copilot` |
 | Hermes | `feyagate install-hermes` |
 
-### Option 3 — Manual install
+Then **restart your AI assistant** and try: *"List my smart home devices."*
 
-For users who prefer running commands step by step:
-
-```bash
-pip install feyagate-skill    # 1. Install the feyagate tool
-feyagate setup              # 2. Download the gateway program (~30MB)
-feyagate start              # 3. Start the service
-feyagate install-cursor     # 4. Connect your AI assistant (pick one)
-feyagate auth               # 5. Sign in to Mi Home
-```
+- **Web dashboard:** [http://localhost:38080](http://localhost:38080)
+- **Stuck?** See [QUICKSTART.md](QUICKSTART.md) troubleshooting
 
 ## CLI Commands
 
@@ -95,8 +94,12 @@ feyagate auth               # 5. Sign in to Mi Home
 |:-------|:--------|
 | Install gateway | `feyagate setup` |
 | Start / stop | `feyagate start` · `feyagate stop` |
-| Status / logs | `feyagate status` · `feyagate log` |
+| Restart | `feyagate restart` |
+| Status / logs | `feyagate status` · `feyagate log [-n 50]` |
 | Mi Home login | `feyagate auth` |
+| Camera snapshot | `feyagate snapshot --list` · `feyagate snapshot --camera-id ID --connect` |
+| Scheduled capture | `feyagate scheduled --camera-id ID --interval 300` |
+| Version | `feyagate --version` |
 | Upgrade | `feyagate upgrade` or `pip install --upgrade feyagate-skill` |
 
 ## MCP Tools at a Glance
@@ -111,7 +114,7 @@ feyagate auth               # 5. Sign in to Mi Home
 | **Scenes / Rooms / Schedule** | `scene/*` `room/*` `schedule/*` `trigger/*` |
 | **Memory** | `memory/read` `memory/add` `memory/search` |
 
-> Full API: [SKILL.md](SKILL.md) · [QUICKSTART.md](QUICKSTART.md)
+> Full API reference: [SKILL.md](SKILL.md) · [FeyaGate_MCP_API.md](FeyaGate_MCP_API.md) · [FeyaGate_HTTP_API.md](FeyaGate_HTTP_API.md)
 
 ## How It Works
 
@@ -121,6 +124,21 @@ feyagate auth               # 5. Sign in to Mi Home
 │ (Claude etc)│   localhost:38080     │  (miloco-mcp)     │                      │  Devices │
 └─────────────┘                       └──────────────────┘                      └──────────┘
 ```
+
+## Development
+
+```bash
+git clone https://github.com/toddpan/feyagate-skill.git
+cd feyagate-skill
+pip install -e ".[dev]"
+pytest                        # run all tests
+pytest tests/test_cli.py      # run single file
+pytest tests/test_cli.py::TestClass::test_method  # run single test
+bash scripts/build.sh         # build PyPI package (outputs to dist/)
+bash scripts/publish.sh pypi  # publish to PyPI (requires PYPI_TOKEN env var)
+```
+
+Tests use `pytest` with `unittest.mock`. Each module has a corresponding test file in `tests/` (e.g. `test_cli.py`, `test_service.py`, `test_installer.py`).
 
 ## License
 
@@ -143,17 +161,9 @@ MIT License
 
 **准备：** 一台 Mac / Linux / Windows 电脑 · 已安装 [Python 3.9+](https://www.python.org/downloads/) · 能打开「终端」或 PowerShell
 
-### 方式一：让 AI 帮你装（最省心）
+### 方式一：一条命令自动安装（推荐）
 
-把下面这段话复制发给 Cursor、Claude 等 AI 助手，它会按步骤帮你装好：
-
-```
-请阅读 https://github.com/toddpan/feyagate-skill/blob/main/QUICKSTART.md 并按照指南在我的机器上安装和配置 FeyaGate Skill。
-```
-
-### 方式二：一条命令自动安装（推荐）
-
-**复制下面整行**，粘贴到终端里按回车，等几分钟即可。脚本会自动：安装工具 → 下载网关程序 → 启动服务。
+**复制下面整行**，粘贴到终端里按回车，等几分钟即可：
 
 **Mac / Linux** — 打开「**终端**」（Mac 可按 `Command + 空格`，搜索「终端」）：
 
@@ -161,7 +171,7 @@ MIT License
 curl -fsSL https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.sh | bash
 ```
 
-**Windows** — 打开「**PowerShell**」（开始菜单搜索 PowerShell）：
+**Windows** — 打开 **PowerShell**，粘贴并运行：
 
 ```powershell
 iwr -useb https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.ps1 | iex
@@ -169,18 +179,32 @@ iwr -useb https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/
 
 > 还没有 Python？到 [python.org](https://www.python.org/downloads/) 下载安装；Windows 安装时务必勾选 **Add Python to PATH**。
 
-### 装好之后，再做 3 件事
+> **想让 AI 帮你装？** 把下面这段话发给 Cursor、Claude 等 AI 助手：
+> `请阅读 https://github.com/toddpan/feyagate-skill/blob/main/QUICKSTART.md 并按照指南在我的机器上安装和配置 FeyaGate Skill。`
 
-| 步骤 | 要做什么 | 命令 |
-|:-----|:---------|:-----|
-| **1** | 让 AI 助手认识 FeyaGate | 见下表，例如 `feyagate install-cursor` |
-| **2** | 登录小米/米家账号 | `feyagate auth` |
-| **3** | 确认服务已启动 | `feyagate status` |
+### 方式二：从 PyPI 安装（逐步执行）
 
-完成后 **重启你的 AI 助手**，试着说：「列出我家的智能设备」。
+```bash
+pip install feyagate-skill    # 1. 安装命令行工具
+feyagate setup              # 2. 下载网关程序（约 30MB，需联网）
+feyagate start              # 3. 启动服务
+feyagate install-cursor     # 4. 接入 AI 助手（按下表选一个）
+feyagate auth               # 5. 登录小米账号
+```
 
-- **网页管理：** 浏览器打开 [http://localhost:38080](http://localhost:38080)
-- **遇到问题？** 查看 [QUICKSTART.md](QUICKSTART.md) 故障排除
+### 方式三：从源码安装（开发者）
+
+```bash
+git clone https://github.com/toddpan/feyagate-skill.git
+cd feyagate-skill
+pip install -e ".[dev]"     # 可编辑安装，含开发依赖（pytest 等），代码修改即时生效
+feyagate setup
+feyagate start
+feyagate install-cursor     # 或 install-claude、install-hermes 等
+feyagate auth
+```
+
+### 装好之后 — 让 AI 助手认识 FeyaGate
 
 | 你用的 AI 助手 | 运行这条命令 |
 |:---------------|:-------------|
@@ -192,15 +216,10 @@ iwr -useb https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/
 | Copilot（VS Code） | `feyagate install-copilot` |
 | Hermes | `feyagate install-hermes` |
 
-### 方式三：手动安装（熟悉命令行可选）
+完成后 **重启你的 AI 助手**，试着说：「列出我家的智能设备」。
 
-```bash
-pip install feyagate-skill    # 1. 安装 feyagate 命令行工具
-feyagate setup              # 2. 下载网关程序（约 30MB，需联网）
-feyagate start              # 3. 启动服务
-feyagate install-cursor     # 4. 接入 AI 助手（按上表选一个）
-feyagate auth               # 5. 登录小米账号
-```
+- **网页管理：** 浏览器打开 [http://localhost:38080](http://localhost:38080)
+- **遇到问题？** 查看 [QUICKSTART.md](QUICKSTART.md) 故障排除
 
 ## 常用命令
 
@@ -208,20 +227,27 @@ feyagate auth               # 5. 登录小米账号
 |:---------|:-----|
 | 下载/更新网关程序 | `feyagate setup` |
 | 启动 / 停止 | `feyagate start` · `feyagate stop` |
-| 查看状态 / 日志 | `feyagate status` · `feyagate log` |
+| 重启 | `feyagate restart` |
+| 查看状态 / 日志 | `feyagate status` · `feyagate log [-n 50]` |
 | 登录米家 | `feyagate auth` |
+| 摄像头抓拍 | `feyagate snapshot --list` · `feyagate snapshot --camera-id ID --connect` |
+| 定时抓拍分析 | `feyagate scheduled --camera-id ID --interval 300` |
+| 查看版本 | `feyagate --version` |
 | 升级 | `feyagate upgrade` 或 `pip install --upgrade feyagate-skill` |
 
 ## MCP 工具一览
 
 | 类别 | 工具 |
 |:-----|:-----|
-| **查设备** | `device/list` `device/specs` |
-| **小米控制** | `xiaomi/get_properties` `xiaomi/set_property` |
-| **小爱音箱** | `xiaoai/tts` `xiaoai/play_music` |
-| **摄像头** | `xiaomi/camera_snapshot` 等 |
+| **查设备** | `device/list` `device/specs` `platform/status` `gateway/info` |
+| **小米控制** | `xiaomi/get_properties` `xiaomi/set_property` `xiaomi/execute_action` |
+| **小爱音箱** | `xiaoai/tts` `xiaoai/play_music` `xiaoai/control` |
+| **摄像头** | `xiaomi/camera_list` `xiaomi/camera_connect` `xiaomi/camera_snapshot` |
 | **涂鸦 / 美的 / 易微联** | 各平台控制 + `auth/*` 登录 |
-| **场景 / 房间 / 定时** | `scene/*` `room/*` `schedule/*` |
+| **场景 / 房间 / 定时** | `scene/*` `room/*` `schedule/*` `trigger/*` |
+| **记忆** | `memory/read` `memory/add` `memory/search` |
+
+> 完整 API 文档：[SKILL.md](SKILL.md) · [FeyaGate_MCP_API.md](FeyaGate_MCP_API.md) · [FeyaGate_HTTP_API.md](FeyaGate_HTTP_API.md)
 
 
 ## 工作原理
@@ -234,6 +260,21 @@ feyagate auth               # 5. 登录小米账号
 ```
 
 你对 AI 说「开灯」→ AI 调用 FeyaGate → 设备执行。
+
+## 开发
+
+```bash
+git clone https://github.com/toddpan/feyagate-skill.git
+cd feyagate-skill
+pip install -e ".[dev]"
+pytest                        # 运行所有测试
+pytest tests/test_cli.py      # 运行单个文件
+pytest tests/test_cli.py::TestClass::test_method  # 运行单个测试
+bash scripts/build.sh         # 打包（输出到 dist/）
+bash scripts/publish.sh pypi  # 发布到 PyPI（需设置 PYPI_TOKEN 环境变量）
+```
+
+测试使用 `pytest` + `unittest.mock`。`tests/` 下每个模块对应一个测试文件（如 `test_cli.py`、`test_service.py`、`test_installer.py`）。
 
 ## 许可证
 

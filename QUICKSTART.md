@@ -35,10 +35,22 @@ iwr -useb https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/
 
 After one-line install, skip to **Step 3** (install agent skill). If you prefer manual steps, continue below.
 
+> **For developers:** Clone the repo and use `pip install -e .` instead of the one-line script — see Step 1 Option B.
+
 ## Step 1: Install [AUTO]
 
+**Option A — from PyPI (standard online install):**
+
 ```bash
-pip install --force-reinstall feyagate-skill
+pip install feyagate-skill
+```
+
+**Option B — from source (developers / contributors):**
+
+```bash
+git clone https://github.com/toddpan/feyagate-skill.git
+cd feyagate-skill
+pip install -e ".[dev]"     # includes pytest and other dev dependencies
 ```
 
 Verify:
@@ -278,7 +290,7 @@ curl -s -X POST http://localhost:38080/mcp/http \
 
 | Issue | Solution |
 |-------|----------|
-| `command not found: feyagate` | `pip install feyagate-skill` |
+| `command not found: feyagate` | `pip install feyagate-skill` or `pip install -e .` from repo root |
 | `FeyaGate not installed` | `feyagate setup` |
 | `connection refused` | `feyagate start` |
 | `authorized: false` | `feyagate auth` |

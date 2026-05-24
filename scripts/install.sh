@@ -143,12 +143,12 @@ step_n 1 "安装 feyagate 命令行工具…"
 
 # shellcheck disable=SC2086
 if [ "$VERBOSE" = 1 ]; then
-    if ! $PIP install --force-reinstall --verbose feyagate-skill; then
+    if ! $PIP install --verbose feyagate-skill; then
         error "安装失败。请检查网络，或稍后重试。"
         exit 1
     fi
 else
-    if ! $PIP install --force-reinstall feyagate-skill; then
+    if ! $PIP install feyagate-skill; then
         error "安装失败。请检查网络，或稍后重试。"
         exit 1
     fi

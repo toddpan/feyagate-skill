@@ -295,9 +295,10 @@ class TestMain:
 
     def test_version_flag(self, monkeypatch):
         """Test --version prints version and exits."""
+        import re
         import feyagate_skill.cli as cli_mod
         assert hasattr(cli_mod, '__version__')
-        assert cli_mod.__version__ == "1.2.4"
+        assert re.match(r"^\d+\.\d+\.\d+", cli_mod.__version__)
 
     def test_install_openclaw_command(self, monkeypatch, tmp_path):
         """Test install-openclaw command calls _install_openclaw."""

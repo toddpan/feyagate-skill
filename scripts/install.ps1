@@ -99,7 +99,7 @@ Write-Host ' |  _|  __/ |_| | (_| | |_| | (_| | ||  __/' -ForegroundColor Cyan
 Write-Host ' |_|  \___|\__, |\__,_|\____|\__,_|\__\___|' -ForegroundColor Cyan
 Write-Host '           |___/' -ForegroundColor Cyan
 Write-Host ""
-Write-Info "FeyaGate 智能家居网关 — 自动安装"
+Write-Ok "FeyaGate 智能家居网关 — 自动安装"
 Write-Host ""
 Write-Host "  即将自动完成（约 2～5 分钟，需联网）："
 Write-Host "    ① 安装 feyagate 命令行工具"
@@ -136,9 +136,9 @@ Write-StepN 1 "安装 feyagate 命令行工具…"
 
 try {
     if ($pipCmd -match " -m pip$") {
-        Invoke-Expression "$pipCmd install --force-reinstall feyagate-skill"
+        Invoke-Expression "$pipCmd install feyagate-skill"
     } else {
-        & $pipCmd install --force-reinstall feyagate-skill
+        & $pipCmd install feyagate-skill
     }
 } catch {
     Write-Err "安装失败。请检查网络，或稍后重试。"

@@ -98,28 +98,33 @@ def do_start(port=None):
         else:
             env["LD_LIBRARY_PATH"] = str(lib_dir) + os.pathsep + env.get("LD_LIBRARY_PATH", "")
 
-    port = port or _read_port()
+    config_port = _read_port()
+    if port and port != config_port:
+        print(f"WARNING: --port only affects the health check URL. The binary reads its port from config.yaml (currently {config_port}).")
+        print(f"  To change the listening port, edit: {config}")
+    port = port or config_port
 
     print(f"Starting miloco-mcp-server (port {port})...")
     try:
-        if sys.platform == "win32":
-            proc = subprocess.Popen(
-                [str(binary), "--config", str(config)],
-                cwd=str(install_dir),
-                stdout=open(log_file, "w"),
-                stderr=subprocess.STDOUT,
-                env=env,
-                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
-            )
-        else:
-            proc = subprocess.Popen(
-                [str(binary), "--config", str(config)],
-                cwd=str(install_dir),
-                stdout=open(log_file, "w"),
-                stderr=subprocess.STDOUT,
-                env=env,
-                start_new_session=True,
-            )
+        with open(log_file, "w") as log_fh:
+            if sys.platform == "win32":
+                proc = subprocess.Popen(
+                    [str(binary), "--config", str(config)],
+                    cwd=str(install_dir),
+                    stdout=log_fh,
+                    stderr=subprocess.STDOUT,
+                    env=env,
+                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+                )
+            else:
+                proc = subprocess.Popen(
+                    [str(binary), "--config", str(config)],
+                    cwd=str(install_dir),
+                    stdout=log_fh,
+                    stderr=subprocess.STDOUT,
+                    env=env,
+                    start_new_session=True,
+                )
     except OSError as exc:
         logger.error("Failed to start server: %s", exc)
         print(f"ERROR: Failed to start server: {exc}")
@@ -160,6 +165,10 @@ def do_stop():
     if not running:
         print("Server is not running")
         return True
+
+    if pid is None:
+        print("ERROR: Server is running but PID is unavailable (permission denied). Stop it manually.")
+        return False
 
     print(f"Stopping miloco-mcp-server (PID {pid})...")
     try:

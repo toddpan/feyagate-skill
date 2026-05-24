@@ -7,8 +7,9 @@ class TestPackageInit:
     """Test package-level exports."""
 
     def test_version(self):
+        import re
         assert isinstance(feyagate_skill.__version__, str)
-        assert feyagate_skill.__version__ == "1.2.4"
+        assert re.match(r"^\d+\.\d+\.\d+", feyagate_skill.__version__)
 
     def test_author(self):
         assert feyagate_skill.__author__ == "panzuji"
