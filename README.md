@@ -1,3 +1,5 @@
+![](images/1.png)
+
 # FeyaGate — MCP Smart Home Gateway for AI Agents
 
 [中文](#中文) | [English](#english)
