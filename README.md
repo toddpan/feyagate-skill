@@ -47,8 +47,9 @@ iwr -useb https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/
 > No Python yet? Install from [python.org](https://www.python.org/downloads/) and check **Add Python to PATH** on Windows.
 
 > **Let AI do it for you?** Send this to Claude, Cursor, or any AI assistant:
-> `Please read https://github.com/toddpan/feyagate-skill/blob/main/QUICKSTART.md and follow the instructions to install and set up FeyaGate Skill on my machine.`
-
+```bash
+Please read https://github.com/toddpan/feyagate-skill/blob/main/QUICKSTART.md and follow the instructions to install and set up FeyaGate Skill on my machine.
+```
 ### Option 2 — Install from PyPI (step by step)
 
 ```bash
@@ -180,7 +181,9 @@ iwr -useb https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/
 > 还没有 Python？到 [python.org](https://www.python.org/downloads/) 下载安装；Windows 安装时务必勾选 **Add Python to PATH**。
 
 > **想让 AI 帮你装？** 把下面这段话发给 Cursor、Claude 等 AI 助手：
-> `请阅读 https://github.com/toddpan/feyagate-skill/blob/main/QUICKSTART.md 并按照指南在我的机器上安装和配置 FeyaGate Skill。`
+```bash
+请阅读 https://github.com/toddpan/feyagate-skill/blob/main/QUICKSTART.md 并按照指南在我的机器上安装和配置 FeyaGate Skill。
+```
 
 ### 方式二：从 PyPI 安装（逐步执行）
 
