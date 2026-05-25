@@ -136,7 +136,11 @@ def do_auth(host=None, port=None, code=None, status_only=False):
     print()
 
     print("Step 3: Submit auth code")
-    callback_url = input("Paste the full callback URL: ").strip()
+    try:
+        callback_url = input("Paste the full callback URL: ").strip()
+    except (KeyboardInterrupt, EOFError):
+        print(_c('yellow', "\n  Cancelled"))
+        return
     if not callback_url:
         print(_c('red', "  No input"))
         return
