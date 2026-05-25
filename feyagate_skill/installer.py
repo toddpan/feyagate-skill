@@ -38,6 +38,34 @@ def _detect_fota_type():
     return fota, os_name, arch
 
 
+def _parse_relaxed_json(text):
+    """Parse JavaScript-style object notation with unquoted keys/values."""
+    import re
+    # Process line by line: quote unquoted keys and values
+    lines = []
+    for line in text.splitlines():
+        stripped = line.strip()
+        # Match lines like:  key: value  or  key: value,
+        m = re.match(r'^(\w+)\s*:\s*(.*?)(,?)$', stripped)
+        if m:
+            key, val, comma = m.groups()
+            val = val.strip()
+            # Quote value unless it's a JSON literal (true/false/null/number)
+            if val in ('true', 'false', 'null') or val == '':
+                if val == '':
+                    val = '""'
+            else:
+                try:
+                    json.loads(val)
+                except (json.JSONDecodeError, ValueError):
+                    val = json.dumps(val)
+            indent = line[:len(line) - len(line.lstrip())]
+            lines.append(f'{indent}"{key}": {val}{comma}')
+        else:
+            lines.append(line)
+    return json.loads('\n'.join(lines))
+
+
 def _fetch_fota():
     """Fetch version info from FOTA server.
 
@@ -51,8 +79,11 @@ def _fetch_fota():
     from urllib.request import urlopen
     try:
         with urlopen(FOTA_URL, timeout=15) as resp:
-            data = resp.read()
-        return json.loads(data)
+            data = resp.read().decode("utf-8")
+        try:
+            return json.loads(data)
+        except json.JSONDecodeError:
+            return _parse_relaxed_json(data)
     except URLError as exc:
         raise RuntimeError(f"Cannot reach FOTA server: {exc}") from exc
     except json.JSONDecodeError as exc:
@@ -341,6 +372,13 @@ def do_setup(install_dir=None):
             if local_md5 != expected_md5:
                 print(f"WARNING: MD5 mismatch (expected {expected_md5}, got {local_md5})")
                 print("  File may be corrupted")
+
+    # Stop running server before overwriting binary
+    from .service import _is_running, do_stop
+    running, _pid = _is_running()
+    if running:
+        print("Stopping running server before upgrade...")
+        do_stop()
 
     # Extract
     print("Extracting...")
