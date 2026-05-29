@@ -255,16 +255,40 @@ def _extract(archive, install_dir):
                 f"No executable found in archive. Contents: {[e.name for e in inner.iterdir()]}"
             )
 
-        # Deploy libraries
+        # Deploy libraries (preserve symlinks; skip macOS AppleDouble ._ files)
         lib_dir = install_dir / "lib"
         lib_dir.mkdir(parents=True, exist_ok=True)
         inner_lib = inner / "lib"
         lib_count = 0
         if inner_lib.is_dir():
+            # Two passes: copy real files first, then recreate symlinks so their
+            # targets already exist. Skip ._* AppleDouble metadata files.
             for f in inner_lib.iterdir():
+                if f.name.startswith("._"):
+                    continue
+                if f.is_symlink():
+                    continue
                 if f.is_file():
                     shutil.copy2(f, lib_dir / f.name)
                     lib_count += 1
+            for f in inner_lib.iterdir():
+                if f.name.startswith("._"):
+                    continue
+                if not f.is_symlink():
+                    continue
+                dest = lib_dir / f.name
+                target = os.readlink(f)
+                if dest.exists() or dest.is_symlink():
+                    dest.unlink()
+                try:
+                    os.symlink(target, dest)
+                    lib_count += 1
+                except OSError:
+                    # Fallback: copy the resolved file if symlink unsupported
+                    resolved = inner_lib / target
+                    if resolved.is_file():
+                        shutil.copy2(resolved, dest)
+                        lib_count += 1
         print(f"  [OK] lib/ ({lib_count} files)")
 
         # Create bin/lib symlink for rpath (skip on Windows)
