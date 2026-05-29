@@ -52,9 +52,11 @@ def _detect_release_tag():
 def _github_archive_url(version, release_tag):
     """Build the GitHub Releases download URL for the server archive.
 
-    mac-arm64 uses tar.gz to preserve dylib symlinks; other platforms use zip.
+    Only Windows uses .zip; all Unix platforms (macOS/Linux) use .tar.gz to
+    preserve symlinks, file permissions, and POSIX path separators. A Windows
+    zip built with backslash separators cannot be extracted correctly on Unix.
     """
-    ext = "tar.gz" if release_tag == "mac-arm64" else "zip"
+    ext = "zip" if release_tag.startswith("win") else "tar.gz"
     archive = f"miloco-mcp-server-{release_tag}-v{version}.{ext}"
     return f"{SERVER_RELEASE_BASE}/v{version}/{archive}", archive
 
