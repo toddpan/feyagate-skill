@@ -378,9 +378,9 @@ def do_setup(install_dir=None):
     print(f"  Install:  {install_dir}")
     print()
 
-    # The binary version tracks the package version: feyagate-skill 1.2.16
-    # downloads miloco-mcp-server-releases v1.2.16.
-    version = __version__
+    # The binary version is pinned to 1.2.16 (the latest available release).
+    # Package versions 1.2.17+ are Python wrapper updates only.
+    version = "1.2.16"
 
     # Optionally consult fota.json for an OTA fallback URL + md5 (best-effort).
     fota_url = ""

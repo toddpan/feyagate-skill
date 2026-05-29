@@ -1,6 +1,6 @@
 """FeyaGate Skill - MCP Smart Home Gateway for AI Agents."""
 
-__version__ = "1.2.16"
+__version__ = "1.2.20"
 __author__ = "panzuji"
 
 DEFAULT_INSTALL_DIR = "~/.feyagate"
