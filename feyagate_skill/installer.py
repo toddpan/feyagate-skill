@@ -50,8 +50,12 @@ def _detect_release_tag():
 
 
 def _github_archive_url(version, release_tag):
-    """Build the GitHub Releases download URL for the server archive."""
-    archive = f"miloco-mcp-server-{release_tag}-v{version}.zip"
+    """Build the GitHub Releases download URL for the server archive.
+
+    mac-arm64 uses tar.gz to preserve dylib symlinks; other platforms use zip.
+    """
+    ext = "tar.gz" if release_tag == "mac-arm64" else "zip"
+    archive = f"miloco-mcp-server-{release_tag}-v{version}.{ext}"
     return f"{SERVER_RELEASE_BASE}/v{version}/{archive}", archive
 
 
