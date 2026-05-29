@@ -13,7 +13,7 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-from . import FOTA_URL, __version__
+from . import FOTA_URL, SERVER_RELEASE_BASE, __version__
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +25,34 @@ FOTA_TYPE_MAP = {
     ("Windows", "AMD64"): "feyagate-skill-win",
     ("Windows", "ARM64"): "feyagate-skill-win",
 }
+
+# Platform tag used in GitHub release asset names, e.g. miloco-mcp-server-win-x64-v1.2.16.zip
+# Matches feyagate-desktop/scripts/download-server.js and scripts/install.sh.
+RELEASE_TAG_MAP = {
+    ("Linux", "x86_64"): "linux-x64",
+    ("Linux", "amd64"): "linux-x64",
+    ("Linux", "aarch64"): "linux-arm64",
+    ("Linux", "arm64"): "linux-arm64",
+    ("Darwin", "x86_64"): "mac-x64",
+    ("Darwin", "arm64"): "mac-arm64",
+    ("Windows", "AMD64"): "win-x64",
+    ("Windows", "ARM64"): "win-arm64",
+}
+
+
+def _detect_release_tag():
+    """Return the GitHub release platform tag for the current machine."""
+    key = (platform.system(), platform.machine())
+    if key in RELEASE_TAG_MAP:
+        return RELEASE_TAG_MAP[key]
+    # fallback: x64 for the detected OS
+    return f"{platform.system().lower()}-x64"
+
+
+def _github_archive_url(version, release_tag):
+    """Build the GitHub Releases download URL for the server archive."""
+    archive = f"miloco-mcp-server-{release_tag}-v{version}.zip"
+    return f"{SERVER_RELEASE_BASE}/v{version}/{archive}", archive
 
 
 def _detect_fota_type():
@@ -145,6 +173,27 @@ def _md5(path):
     return h.hexdigest()
 
 
+def _sha256(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _fetch_sha256(url):
+    """Fetch a .sha256 sidecar file; return the hex digest or None."""
+    from urllib.request import urlopen
+    try:
+        with urlopen(url, timeout=30) as resp:
+            if resp.status != 200:
+                return None
+            text = resp.read().decode("utf-8", "replace")
+            return text.strip().split()[0].lower() if text.strip() else None
+    except Exception:
+        return None
+
+
 def _extract(archive, install_dir):
     """Extract release archive to install_dir.
 
@@ -171,17 +220,27 @@ def _extract(archive, install_dir):
         if len(entries) == 1 and entries[0].is_dir():
             inner = entries[0]
 
-        # Deploy binary
+        # Deploy binary (handles both Unix `miloco-mcp-server` and Windows `.exe`)
         bin_dir = install_dir / "bin"
         bin_dir.mkdir(parents=True, exist_ok=True)
+        bin_name = "miloco-mcp-server.exe" if sys.platform == "win32" else "miloco-mcp-server"
         found_binary = False
-        for candidate in ["miloco-mcp-server", "bin/miloco-mcp-server"]:
+        candidates = [
+            bin_name,
+            f"bin/{bin_name}",
+            "miloco-mcp-server.exe",
+            "miloco-mcp-server",
+            "bin/miloco-mcp-server.exe",
+            "bin/miloco-mcp-server",
+        ]
+        for candidate in candidates:
             src = inner / candidate
             if src.exists():
-                dest = bin_dir / "miloco-mcp-server"
+                dest = bin_dir / bin_name
                 shutil.copy2(src, dest)
-                dest.chmod(0o755)
-                print(f"  [OK] bin/miloco-mcp-server")
+                if sys.platform != "win32":
+                    dest.chmod(0o755)
+                print(f"  [OK] bin/{bin_name}")
                 found_binary = True
                 break
 
@@ -313,65 +372,87 @@ def do_setup(install_dir=None):
     install_dir.mkdir(parents=True, exist_ok=True)
 
     fota_type, os_name, arch = _detect_fota_type()
+    release_tag = _detect_release_tag()
     print("FeyaGate Skill Setup")
     print(f"  Platform: {os_name}-{arch}")
     print(f"  Install:  {install_dir}")
     print()
 
-    # Fetch version info
-    print("Fetching latest version info...")
+    # The binary version tracks the package version: feyagate-skill 1.2.16
+    # downloads miloco-mcp-server-releases v1.2.16.
+    version = __version__
+
+    # Optionally consult fota.json for an OTA fallback URL + md5 (best-effort).
+    fota_url = ""
+    expected_md5 = ""
     try:
         fota_data = _fetch_fota()
+        for item in fota_data:
+            if item.get("type") == fota_type:
+                fota_url = item.get("url", "")
+                expected_md5 = item.get("md5", "")
+                break
     except RuntimeError as exc:
-        print(f"ERROR: {exc}")
-        return False
+        logger.warning("fota.json unavailable, GitHub-only mode: %s", exc)
 
-    # Find matching entry
-    entry = None
-    for item in fota_data:
-        if item.get("type") == fota_type:
-            entry = item
-            break
+    # Primary source: GitHub Releases.
+    download_url, archive_name = _github_archive_url(version, release_tag)
+    expected_sha256 = _fetch_sha256(download_url + ".sha256")
 
-    if not entry:
-        print(f"ERROR: No release found for {fota_type}")
-        available = [i["type"] for i in fota_data if "feyagate-skill" in i.get("type", "")]
-        print(f"  Available: {', '.join(available)}")
-        return False
-
-    version = entry["version"]
-    download_url = entry["url"]
-    expected_md5 = entry.get("md5", "")
-
-    print(f"  Latest version: {version}")
+    print(f"  Version:      v{version}")
     print(f"  Download URL: {download_url}")
     print()
 
     # Download
-    archive_name = download_url.rsplit("/", 1)[-1]
     archive_path = install_dir / "packages" / archive_name
     archive_path.parent.mkdir(parents=True, exist_ok=True)
 
+    def _verify(path):
+        if expected_sha256:
+            return _sha256(path) == expected_sha256
+        if expected_md5:
+            return _md5(path) == expected_md5
+        return None  # nothing to verify against
+
     need_download = True
-    if archive_path.exists() and expected_md5:
-        local_md5 = _md5(archive_path)
-        if local_md5 == expected_md5:
-            print("Package already downloaded (MD5 verified)")
+    if archive_path.exists():
+        ok = _verify(archive_path)
+        if ok is True:
+            print("Package already downloaded (checksum verified)")
+            need_download = False
+        elif ok is None:
+            print("Package already downloaded")
             need_download = False
 
     if need_download:
+        downloaded = False
         try:
             _download(download_url, archive_path)
+            downloaded = True
         except RuntimeError as exc:
-            print(f"\nERROR: {exc}")
-            return False
+            print(f"\nWARNING: GitHub download failed: {exc}")
+            if fota_url:
+                print(f"  Falling back to OTA server: {fota_url}")
+                try:
+                    archive_name = fota_url.rsplit("/", 1)[-1]
+                    archive_path = install_dir / "packages" / archive_name
+                    _download(fota_url, archive_path)
+                    download_url = fota_url
+                    expected_sha256 = ""  # OTA uses md5
+                    downloaded = True
+                except RuntimeError as exc2:
+                    print(f"\nERROR: {exc2}")
+                    return False
+            else:
+                print(f"\nERROR: {exc}")
+                return False
 
-        # Verify MD5
-        if expected_md5:
-            local_md5 = _md5(archive_path)
-            if local_md5 != expected_md5:
-                print(f"WARNING: MD5 mismatch (expected {expected_md5}, got {local_md5})")
-                print("  File may be corrupted")
+        if downloaded:
+            ok = _verify(archive_path)
+            if ok is False:
+                print("WARNING: checksum mismatch — file may be corrupted")
+            elif ok is True:
+                print("  [OK] checksum verified")
 
     # Stop running server before overwriting binary
     from .service import _is_running, do_stop

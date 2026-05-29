@@ -40,16 +40,31 @@ def _is_running():
     try:
         raw = pid_file.read_text().strip()
         pid = int(raw)
-        os.kill(pid, 0)  # check if alive
-        return True, pid
-    except ValueError as exc:
+    except (ValueError, OSError) as exc:
         logger.warning("Invalid PID in %s: %s", pid_file, exc)
         return False, None
+
+    if sys.platform == "win32":
+        # os.kill(pid, 0) is unreliable on Windows; query the task list instead.
+        try:
+            out = subprocess.run(
+                ["tasklist", "/FI", f"PID eq {pid}", "/NH"],
+                capture_output=True, text=True, timeout=10,
+            )
+            return (str(pid) in out.stdout), (pid if str(pid) in out.stdout else None)
+        except Exception:
+            return False, None
+
+    try:
+        os.kill(pid, 0)  # check if alive
+        return True, pid
     except ProcessLookupError:
         return False, None
     except PermissionError:
         # Process exists but we lack permission to signal it
         return True, None
+    except OSError:
+        return False, None
 
 
 def do_start(port=None):
@@ -59,7 +74,8 @@ def do_start(port=None):
         True on success, False on failure.
     """
     install_dir = _install_dir()
-    binary = install_dir / "bin" / "miloco-mcp-server"
+    bin_name = "miloco-mcp-server.exe" if sys.platform == "win32" else "miloco-mcp-server"
+    binary = install_dir / "bin" / bin_name
     config = install_dir / "config" / "config.yaml"
     pid_file = install_dir / "data" / "miloco-mcp-server.pid"
     log_file = install_dir / "data" / "miloco-mcp-server.log"
