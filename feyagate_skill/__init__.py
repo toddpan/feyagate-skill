@@ -1,6 +1,9 @@
 """FeyaGate Skill - MCP Smart Home Gateway for AI Agents."""
 
-__version__ = "1.2.27"
+import os
+from pathlib import Path
+
+__version__ = "1.2.29"
 __author__ = "panzuji"
 
 DEFAULT_INSTALL_DIR = "~/.feyagate"
@@ -14,6 +17,46 @@ SERVER_RELEASE_BASE = (
 MCP_DEFAULT_PORT = 38080
 MCP_DEFAULT_HOST = "127.0.0.1"
 
+# Fixed pointer file recording where `setup --dir` installed, so that later
+# commands (start/stop/status/...) find the same directory regardless of cwd.
+_POINTER_FILE = Path(os.path.expanduser("~/.config/feyagate/install_dir"))
+
+
+def resolve_install_dir(explicit=None):
+    """Return the active install directory.
+
+    Precedence:
+      1. explicit argument (e.g. `setup --dir X`)
+      2. FEYAGATE_INSTALL_DIR environment variable
+      3. pointer file written by a previous `setup`
+      4. default ~/.feyagate
+
+    The result is an absolute Path with ~ expanded.
+    """
+    if explicit:
+        return Path(os.path.expanduser(explicit)).resolve()
+    env = os.environ.get("FEYAGATE_INSTALL_DIR")
+    if env:
+        return Path(os.path.expanduser(env)).resolve()
+    try:
+        if _POINTER_FILE.is_file():
+            saved = _POINTER_FILE.read_text(encoding="utf-8").strip()
+            if saved:
+                return Path(os.path.expanduser(saved)).resolve()
+    except OSError:
+        pass
+    return Path(os.path.expanduser(DEFAULT_INSTALL_DIR)).resolve()
+
+
+def save_install_dir(install_dir):
+    """Persist the chosen install directory to the pointer file."""
+    try:
+        _POINTER_FILE.parent.mkdir(parents=True, exist_ok=True)
+        _POINTER_FILE.write_text(str(Path(install_dir).resolve()) + "\n", encoding="utf-8")
+    except OSError:
+        pass
+
+
 __all__ = [
     "__version__",
     "__author__",
@@ -23,4 +66,6 @@ __all__ = [
     "SERVER_RELEASE_BASE",
     "MCP_DEFAULT_PORT",
     "MCP_DEFAULT_HOST",
+    "resolve_install_dir",
+    "save_install_dir",
 ]

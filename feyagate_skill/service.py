@@ -9,14 +9,14 @@ import sys
 import time
 from pathlib import Path
 
-from . import DEFAULT_INSTALL_DIR, MCP_DEFAULT_PORT
+from . import DEFAULT_INSTALL_DIR, MCP_DEFAULT_PORT, resolve_install_dir
 from .config import get_http_port
 
 logger = logging.getLogger(__name__)
 
 
 def _install_dir():
-    return Path(os.path.expanduser(DEFAULT_INSTALL_DIR))
+    return resolve_install_dir()
 
 
 def _read_port():

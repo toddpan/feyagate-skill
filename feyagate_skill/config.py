@@ -19,8 +19,8 @@ def load_config(path: str | Path | None = None) -> dict:
         Configuration dict. Returns ``{}`` on any error.
     """
     if path is None:
-        from . import DEFAULT_INSTALL_DIR
-        path = Path(DEFAULT_INSTALL_DIR) / "config" / "config.yaml"
+        from . import resolve_install_dir
+        path = resolve_install_dir() / "config" / "config.yaml"
 
     path = Path(path)
     try:

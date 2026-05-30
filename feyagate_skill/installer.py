@@ -13,7 +13,7 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-from . import FOTA_URL, SERVER_RELEASE_BASE, __version__
+from . import FOTA_URL, SERVER_RELEASE_BASE, __version__, resolve_install_dir, save_install_dir
 
 logger = logging.getLogger(__name__)
 
@@ -456,8 +456,10 @@ def do_setup(install_dir=None):
     Returns:
         True on success, False on failure.
     """
-    install_dir = Path(install_dir or os.path.expanduser("~/.feyagate"))
+    install_dir = resolve_install_dir(install_dir)
     install_dir.mkdir(parents=True, exist_ok=True)
+    # Record the chosen location so start/stop/status find it later.
+    save_install_dir(install_dir)
 
     fota_type, os_name, arch = _detect_fota_type()
     release_tag = _detect_release_tag()
