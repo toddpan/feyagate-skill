@@ -468,7 +468,7 @@ def do_setup(install_dir=None):
 
     # The binary version is pinned to 1.2.16 (the latest available release).
     # Package versions 1.2.17+ are Python wrapper updates only.
-    version = "1.2.16"
+    version = "1.2.26"
 
     # Optionally consult fota.json for an OTA fallback URL + md5 (best-effort).
     fota_url = ""
