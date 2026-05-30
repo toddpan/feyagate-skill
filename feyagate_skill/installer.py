@@ -220,11 +220,15 @@ def _extract(archive, install_dir):
             with tarfile.open(archive, "r:gz") as tf:
                 tf.extractall(tmp)
 
-        # Find inner directory
-        entries = list(Path(tmp).iterdir())
+        # Find inner directory, ignoring macOS AppleDouble (._*) sidecar entries
+        # that some tarballs include at the top level.
+        entries = [
+            e for e in Path(tmp).iterdir() if not e.name.startswith("._")
+        ]
         inner = Path(tmp)
-        if len(entries) == 1 and entries[0].is_dir():
-            inner = entries[0]
+        dirs = [e for e in entries if e.is_dir()]
+        if len(dirs) == 1:
+            inner = dirs[0]
 
         # Deploy binary (handles both Unix `miloco-mcp-server` and Windows `.exe`)
         bin_dir = install_dir / "bin"
