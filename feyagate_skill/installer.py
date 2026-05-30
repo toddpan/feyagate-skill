@@ -200,6 +200,54 @@ def _fetch_sha256(url):
         return None
 
 
+def _macos_unquarantine_and_sign(bin_dir, lib_dir):
+    """Clear quarantine attr and ad-hoc sign the binary + dylibs on macOS.
+
+    Binaries downloaded over the network carry com.apple.quarantine, and the
+    bundled .dylib files are unsigned. Without this, Gatekeeper kills the
+    process on launch ("cannot be opened because the developer cannot be
+    verified" / dyld code-signature errors). Best-effort: failures are logged
+    but do not abort installation.
+    """
+    bin_dir = Path(bin_dir)
+    lib_dir = Path(lib_dir)
+    binary = bin_dir / "miloco-mcp-server"
+
+    targets = [binary]
+    if lib_dir.is_dir():
+        targets += [
+            p for p in lib_dir.iterdir()
+            if p.is_file() and not p.is_symlink() and not p.name.startswith("._")
+        ]
+
+    # 1. Strip quarantine recursively (ignore "no such xattr" errors).
+    for path in (binary, lib_dir):
+        if path.exists():
+            subprocess.run(
+                ["xattr", "-rd", "com.apple.quarantine", str(path)],
+                capture_output=True, check=False,
+            )
+
+    # 2. Ad-hoc sign each dylib first, then the binary last.
+    signed = 0
+    for target in targets:
+        if not target.exists():
+            continue
+        result = subprocess.run(
+            ["codesign", "--force", "--sign", "-", str(target)],
+            capture_output=True, check=False,
+        )
+        if result.returncode == 0:
+            signed += 1
+        else:
+            logger.warning(
+                "codesign failed for %s: %s",
+                target.name, result.stderr.decode("utf-8", "replace").strip(),
+            )
+    if signed:
+        print(f"  [OK] macOS: cleared quarantine + ad-hoc signed {signed} file(s)")
+
+
 def _extract(archive, install_dir):
     """Extract release archive to install_dir.
 
@@ -311,6 +359,12 @@ def _extract(archive, install_dir):
                 shutil.rmtree(webui_dir)
             shutil.copytree(inner_webui, webui_dir)
             print("  [OK] webui/")
+
+        # macOS: clear quarantine + ad-hoc re-sign so Gatekeeper allows the
+        # downloaded binary/dylibs to load (network downloads are quarantined
+        # and the unsigned libs would otherwise be killed on launch).
+        if sys.platform == "darwin":
+            _macos_unquarantine_and_sign(bin_dir, lib_dir)
 
     except (zipfile.BadZipFile, tarfile.TarError) as exc:
         raise RuntimeError(f"Archive extraction failed: {exc}") from exc
