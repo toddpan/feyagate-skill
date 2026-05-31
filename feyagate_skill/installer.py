@@ -36,8 +36,9 @@ FOTA_TYPE_MAP = {
     ("Windows", "ARM64"): "feyagate-skill-win-x64",
 }
 
-# Platform tag used in GitHub release asset names, e.g. miloco-mcp-server-win-x64-v1.2.16.zip
-# Matches feyagate-desktop/scripts/download-server.js and scripts/install.sh.
+# Platform tag used in GitHub release asset names.
+# Unified format: miloco-mcp-server-{platformTag}-v{version}.zip / .tar.gz
+# Matches feyagate-desktop/scripts/download-server.js.
 RELEASE_TAG_MAP = {
     ("Linux", "x86_64"): "linux-x64",
     ("Linux", "amd64"): "linux-x64",
@@ -77,10 +78,9 @@ def _github_archive_url(version, release_tag, os_name=None, arch=None):
     if release_tag.startswith("win"):
         archive = f"miloco-mcp-server-{release_tag}-v{version}.zip"
     else:
-        # Match the real Unix asset names: {version}-{System}-{machine}.tar.gz.
-        sys_label = os_name or platform.system()
-        mach_label = arch or platform.machine()
-        archive = f"miloco-mcp-server-{version}-{sys_label}-{mach_label}.tar.gz"
+        # 统一命名格式: miloco-mcp-server-{platformTag}-v{version}.tar.gz
+        # 与 download-server.js (miloco-mcp-server-{platformTag}-v{version}.zip) 一致
+        archive = f"miloco-mcp-server-{release_tag}-v{version}.tar.gz"
     return f"{SERVER_RELEASE_BASE}/v{version}/{archive}", archive
 
 
