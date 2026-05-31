@@ -26,13 +26,25 @@
 - **Memory system** — persistent notes and long-term memory for AI agents
 - **8 AI agents supported** — Claude Code, Cursor, OpenClaw, Hermes, Codex, Windsurf, Copilot, 小智AI
 
-## Quick Start
+## 🚀 Quick Start
 
 **Prerequisites:** Mac / Linux / Windows · Python 3.9+ · Terminal or PowerShell
 
-### Option 1 — One command (recommended)
+---
 
-Copy the **entire line** below, paste into Terminal, press Enter, and wait a few minutes:
+### 🤖 Install & Configure via AI Agent (Recommended)
+
+The easiest way — send this to **Claude Code** or any AI coding agent, and it will handle the entire installation and configuration for you:
+
+```
+Please read https://github.com/toddpan/feyagate-skill/blob/main/QUICKSTART.md and follow the instructions to install and set up FeyaGate Skill on my machine.
+```
+
+Supported AI agents: Claude Code, Cursor, OpenClaw, Hermes, Codex, Windsurf, Copilot, 小智AI
+
+---
+
+### Option 1 — One command (curl)
 
 **Mac / Linux** — open **Terminal** (Spotlight: type `Terminal`):
 
@@ -48,10 +60,6 @@ iwr -useb https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/
 
 > No Python yet? Install from [python.org](https://www.python.org/downloads/) and check **Add Python to PATH** on Windows.
 
-> **Let AI do it for you?** Send this to Claude, Cursor, or any AI assistant:
-```bash
-Please read https://github.com/toddpan/feyagate-skill/blob/main/QUICKSTART.md and follow the instructions to install and set up FeyaGate Skill on my machine.
-```
 ### Option 2 — Install from PyPI (step by step)
 
 ```bash
