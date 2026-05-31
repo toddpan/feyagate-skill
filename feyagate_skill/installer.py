@@ -113,7 +113,7 @@ def _resolve_asset_via_api(version, release_tag):
         logger.warning("GitHub API asset lookup failed: %s", exc)
         return None, None
 
-    ext = ".zip" if release_tag.startswith("win") else ".tar.gz"
+    ext = ".zip" if release_tag.startswith(("win", "mac")) else ".tar.gz"
     keyword_sets = _RELEASE_TAG_KEYWORDS.get(release_tag)
     if not keyword_sets:
         return None, None
