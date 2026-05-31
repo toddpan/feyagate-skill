@@ -175,7 +175,7 @@ feyagate stop         # 停止服务
 feyagate start        # 启动服务
 feyagate restart      # 重启服务
 feyagate log -n 30    # 查看最近 30 行日志
-feyagate upgrade      # 升级到最新版本
+feyagate update       # 升级到最新版本
 ```
 
 网页管理界面：浏览器打开 http://localhost:38080

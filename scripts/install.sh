@@ -68,6 +68,53 @@ find_pip() {
     return 1
 }
 
+# Install or upgrade feyagate-skill using the best available method.
+# Order: pipx (isolated venv, immune to PEP 668, ideal for a CLI tool) →
+#        pip -U --user → pip -U --user --break-system-packages (PEP 668 fallback).
+# Relies on globals PIP, USER_FLAG, VERBOSE, PYTHON (resolved at call time).
+install_feyagate() {
+    local pkg="feyagate-skill"
+    local vflag=""
+    [ "$VERBOSE" = 1 ] && vflag="--verbose"
+
+    # 1. pipx — cleanest for a CLI tool; sidesteps externally-managed envs.
+    if command -v pipx &>/dev/null; then
+        info "使用 pipx 安装（隔离环境，推荐）"
+        # shellcheck disable=SC2086
+        if pipx list 2>/dev/null | grep -q "$pkg"; then
+            pipx upgrade $vflag "$pkg" && return 0
+        else
+            pipx install $vflag "$pkg" && return 0
+        fi
+        warn "pipx 失败，回退到 pip"
+    fi
+
+    if [ -z "$PIP" ]; then
+        error "未找到 pip，请运行: $PYTHON -m ensurepip --upgrade"
+        return 1
+    fi
+
+    # 2. pip -U (+ --user unless inside a virtualenv where --user is invalid).
+    local errlog; errlog="$(mktemp)"
+    # shellcheck disable=SC2086
+    if $PIP install -U $USER_FLAG $vflag "$pkg" 2>"$errlog"; then
+        rm -f "$errlog"; return 0
+    fi
+
+    # 3. PEP 668 externally-managed-environment fallback.
+    if grep -q "externally-managed" "$errlog" 2>/dev/null; then
+        warn "检测到系统级 Python (PEP 668)，改用 --break-system-packages"
+        # shellcheck disable=SC2086
+        if $PIP install -U $USER_FLAG --break-system-packages $vflag "$pkg"; then
+            rm -f "$errlog"; return 0
+        fi
+    else
+        cat "$errlog" >&2
+    fi
+    rm -f "$errlog"
+    return 1
+}
+
 was_running() {
     local pid_file="$INSTALL_DIR/data/miloco-mcp-server.pid"
     [ -f "$pid_file" ] || return 1
@@ -133,25 +180,22 @@ if ! "$PYTHON" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)'
     exit 1
 fi
 
-PIP="$(find_pip "$PYTHON")" || {
-    error "未找到 pip，请运行: $PYTHON -m ensurepip --upgrade"
-    exit 1
-}
+# pip is optional when pipx is present; don't hard-fail here.
+PIP="$(find_pip "$PYTHON" || true)"
+
+# --user is invalid inside a virtualenv/conda env; only pass it for a system Python.
+USER_FLAG="--user"
+if "$PYTHON" -c 'import sys; sys.exit(0 if (sys.prefix != sys.base_prefix or hasattr(sys,"real_prefix")) else 1)' 2>/dev/null; then
+    USER_FLAG=""   # inside a venv: install into the venv, not --user
+fi
+[ -n "${VIRTUAL_ENV:-}" ] && USER_FLAG=""
 
 # ── [1/4] pip ─────────────────────────────────────────────────────────────────
 step_n 1 "安装 feyagate 命令行工具…"
 
-# shellcheck disable=SC2086
-if [ "$VERBOSE" = 1 ]; then
-    if ! $PIP install --verbose feyagate-skill; then
-        error "安装失败。请检查网络，或稍后重试。"
-        exit 1
-    fi
-else
-    if ! $PIP install feyagate-skill; then
-        error "安装失败。请检查网络，或稍后重试。"
-        exit 1
-    fi
+if ! install_feyagate; then
+    error "安装失败。请检查网络，或稍后重试。"
+    exit 1
 fi
 
 command -v feyagate &>/dev/null || export PATH="${HOME}/.local/bin:${PATH}"

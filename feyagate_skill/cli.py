@@ -6,7 +6,7 @@ import platform as _platform
 import sys
 from pathlib import Path
 
-from . import __version__, DEFAULT_INSTALL_DIR, MCP_DEFAULT_PORT
+from . import __version__, MCP_DEFAULT_PORT, resolve_install_dir
 
 
 def _install_skill(skills_dir, agent_name):
@@ -19,7 +19,7 @@ def _install_skill(skills_dir, agent_name):
     Returns:
         True on success, False on failure.
     """
-    install_dir = Path(os.path.expanduser(DEFAULT_INSTALL_DIR))
+    install_dir = resolve_install_dir()
     if not install_dir.exists():
         print("ERROR: FeyaGate not installed. Run: feyagate setup")
         return False
@@ -85,11 +85,13 @@ def main():
     )
     parser.add_argument("--version", action="version", version=f"feyagate-skill {__version__}")
 
-    sub = parser.add_subparsers(dest="command", help="Available commands")
+    sub = parser.add_subparsers(dest="command", metavar="<command>", help="Available commands")
 
     # setup
     p_setup = sub.add_parser("setup", help="Download and install MCP server binary")
     p_setup.add_argument("--dir", default=None, help="Install directory (default: ~/.feyagate)")
+    p_setup.add_argument("--package", default=None,
+                         help="Install from a local archive instead of downloading (offline)")
 
     # start
     p_start = sub.add_parser("start", help="Start MCP server")
@@ -161,8 +163,10 @@ def main():
     # install-codex
     sub.add_parser("install-codex", help="Install FeyaGate skill commands for OpenAI Codex CLI")
 
-    # upgrade
-    sub.add_parser("upgrade", help="Upgrade MCP server to latest version")
+    # update (formerly "upgrade"; upgrade kept as a hidden alias for compatibility —
+    # omitting help= keeps it out of the help listing while remaining callable)
+    sub.add_parser("update", help="Update MCP server to latest version")
+    sub.add_parser("upgrade")
 
     args = parser.parse_args()
 
@@ -172,7 +176,7 @@ def main():
 
     if args.command == "setup":
         from .installer import do_setup
-        do_setup(args.dir)
+        do_setup(args.dir, local_package=args.package)
 
     elif args.command == "start":
         from .service import do_start
@@ -238,7 +242,7 @@ def main():
     elif args.command == "install-codex":
         _install_codex()
 
-    elif args.command == "upgrade":
+    elif args.command in ("update", "upgrade"):
         from .installer import do_setup
         do_setup()
 

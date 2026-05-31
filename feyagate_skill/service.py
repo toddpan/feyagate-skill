@@ -175,6 +175,24 @@ def do_start(port=None):
     return True
 
 
+def _terminate(pid, force=False):
+    """Send a stop request to pid. Returns True if the request was delivered.
+
+    On Windows, os.kill maps arbitrary signals to TerminateProcess and
+    CTRL_BREAK_EVENT only targets a process group (it raises WinError 87 on a
+    bare PID from a detached caller), so use taskkill instead — /F for a hard
+    kill. Returns False when a graceful request could not be delivered (e.g. a
+    windowless process that taskkill can only terminate forcefully), so the
+    caller can escalate immediately instead of waiting out the grace period.
+    """
+    if sys.platform == "win32":
+        cmd = ["taskkill", "/F", "/PID", str(pid)] if force else ["taskkill", "/PID", str(pid)]
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        return result.returncode == 0
+    os.kill(pid, signal.SIGKILL if force else signal.SIGTERM)
+    return True
+
+
 def do_stop():
     """Stop the MCP server. Returns True on success."""
     running, pid = _is_running()
@@ -186,38 +204,45 @@ def do_stop():
         print("ERROR: Server is running but PID is unavailable (permission denied). Stop it manually.")
         return False
 
+    pid_file = _install_dir() / "data" / "miloco-mcp-server.pid"
     print(f"Stopping miloco-mcp-server (PID {pid})...")
+
+    # Graceful stop.
+    delivered = False
     try:
-        os.kill(pid, signal.SIGTERM)
+        delivered = _terminate(pid, force=False)
+    except ProcessLookupError:
+        pass  # already gone
+    except OSError as exc:
+        logger.error("Failed to signal PID %d: %s", pid, exc)
+
+    # Wait for graceful shutdown — but only if the request was actually
+    # delivered. A windowless Windows process rejects graceful taskkill, so
+    # skip the wait and escalate straight to a forced kill below.
+    if delivered:
+        for _ in range(10):
+            time.sleep(0.5)
+            if not _is_running()[0]:
+                pid_file.unlink(missing_ok=True)
+                print("Stopped")
+                return True
+
+    if not _is_running()[0]:
+        pid_file.unlink(missing_ok=True)
+        print("Stopped")
+        return True
+
+    # Force kill.
+    if delivered:
+        logger.warning("Graceful stop timed out, force-killing PID %d", pid)
+    else:
+        logger.info("Graceful stop unavailable, force-killing PID %d", pid)
+    try:
+        _terminate(pid, force=True)
     except ProcessLookupError:
         pass
     except OSError as exc:
-        logger.error("Failed to send SIGTERM to PID %d: %s", pid, exc)
-
-    for _ in range(10):
-        time.sleep(0.5)
-        try:
-            os.kill(pid, 0)
-        except ProcessLookupError:
-            pid_file = _install_dir() / "data" / "miloco-mcp-server.pid"
-            pid_file.unlink(missing_ok=True)
-            print("Stopped")
-            return True
-        except OSError as exc:
-            logger.warning("Unexpected error checking PID %d: %s", pid, exc)
-
-   # Force kill
-    logger.warning("Graceful stop timed out, sending SIGKILL to PID %d", pid)
-    try:
-        if sys.platform == "win32":
-            os.kill(pid, signal.CTRL_BREAK_EVENT)
-        else:
-            os.kill(pid, signal.SIGKILL)
-    except (ProcessLookupError, AttributeError):
-        pass
-    except OSError as exc:
-        logger.error("Failed to SIGKILL PID %d: %s", pid, exc)
-    pid_file = _install_dir() / "data" / "miloco-mcp-server.pid"
+        logger.error("Failed to force-kill PID %d: %s", pid, exc)
     pid_file.unlink(missing_ok=True)
     print("Force stopped")
     return True

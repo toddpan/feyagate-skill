@@ -14,6 +14,11 @@ SERVER_RELEASE_REPO = "toddpan/miloco-mcp-server-releases"
 SERVER_RELEASE_BASE = (
     "https://github.com/toddpan/miloco-mcp-server-releases/releases/download"
 )
+# Version of the prebuilt server binary to download. Decoupled from the Python
+# package __version__: bump this only when a new binary release exists for ALL
+# platforms (mac-x64, mac-arm64, linux-x64, win-x64). Pinned here (not buried in
+# installer.py) so it is the single obvious place to change on a binary release.
+SERVER_BINARY_VERSION = "1.2.16"
 MCP_DEFAULT_PORT = 38080
 MCP_DEFAULT_HOST = "127.0.0.1"
 
@@ -64,6 +69,7 @@ __all__ = [
     "FOTA_URL",
     "SERVER_RELEASE_REPO",
     "SERVER_RELEASE_BASE",
+    "SERVER_BINARY_VERSION",
     "MCP_DEFAULT_PORT",
     "MCP_DEFAULT_HOST",
     "resolve_install_dir",

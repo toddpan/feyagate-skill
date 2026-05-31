@@ -55,8 +55,8 @@ function Test-WasRunning {
     $pidFile = Join-Path $INSTALL_DIR "data\miloco-mcp-server.pid"
     if (-not (Test-Path $pidFile)) { return $false }
     try {
-        $pid = Get-Content $pidFile
-        return $null -ne (Get-Process -Id $pid -ErrorAction SilentlyContinue)
+        $procId = Get-Content $pidFile
+        return $null -ne (Get-Process -Id $procId -ErrorAction SilentlyContinue)
     } catch { return $false }
 }
 
@@ -134,13 +134,33 @@ if ($pipScripts -and (Test-Path $pipScripts)) {
 # ── [1/4] pip ─────────────────────────────────────────────────────────────────
 Write-StepN 1 "安装 feyagate 命令行工具…"
 
-try {
-    if ($pipCmd -match " -m pip$") {
-        Invoke-Expression "$pipCmd install feyagate-skill"
-    } else {
-        & $pipCmd install feyagate-skill
-    }
-} catch {
+# Install or upgrade. Prefer pipx (isolated venv) when present; otherwise pip -U.
+$installed = $false
+if (Get-Command pipx -ErrorAction SilentlyContinue) {
+    Write-Ok "使用 pipx 安装（隔离环境，推荐）"
+    try {
+        $pipxList = & pipx list 2>$null | Out-String
+        if ($pipxList -match "feyagate-skill") {
+            & pipx upgrade feyagate-skill
+        } else {
+            & pipx install feyagate-skill
+        }
+        if ($LASTEXITCODE -eq 0) { $installed = $true }
+    } catch { Write-Warn "pipx 失败，回退到 pip" }
+}
+
+if (-not $installed) {
+    try {
+        if ($pipCmd -match " -m pip$") {
+            Invoke-Expression "$pipCmd install -U feyagate-skill"
+        } else {
+            & $pipCmd install -U feyagate-skill
+        }
+        if ($LASTEXITCODE -eq 0) { $installed = $true }
+    } catch {}
+}
+
+if (-not $installed) {
     Write-Err "安装失败。请检查网络，或稍后重试。"
     exit 1
 }

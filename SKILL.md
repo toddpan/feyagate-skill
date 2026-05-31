@@ -71,7 +71,7 @@ Full step-by-step guide: [QUICKSTART.md](QUICKSTART.md)
 | Restart | `feyagate restart [--port PORT]` |
 | Status | `feyagate status` |
 | Logs | `feyagate log [-n 50]` |
-| Upgrade | `feyagate upgrade` |
+| Update | `feyagate update` |
 | Auth Xiaomi | `feyagate auth [--status] [--code CODE]` |
 
 ### Manual Scripts (Advanced)
@@ -163,7 +163,7 @@ xiaozhi:
 | `FeyaGate not installed` | `feyagate setup` |
 | `connection refused` | `feyagate start` |
 | `authorized: false` | `feyagate auth` (Xiaomi) or use platform-specific auth tool |
-| `cannot open shared object file` | `feyagate upgrade` or re-run `feyagate setup` |
+| `cannot open shared object file` | `feyagate update` or re-run `feyagate setup` |
 | `Tool not found` | Check tool name (see `tools/list` output) |
 | `key 'device_id' not found` | Platform tools use `device_id`; cross-platform `device/specs` uses `deviceId` |
 | `license_required` error | Set license key via `license/set` tool |

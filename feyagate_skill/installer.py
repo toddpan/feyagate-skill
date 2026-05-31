@@ -13,7 +13,15 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-from . import FOTA_URL, SERVER_RELEASE_BASE, __version__, resolve_install_dir, save_install_dir
+from . import (
+    FOTA_URL,
+    SERVER_BINARY_VERSION,
+    SERVER_RELEASE_BASE,
+    SERVER_RELEASE_REPO,
+    __version__,
+    resolve_install_dir,
+    save_install_dir,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +30,10 @@ FOTA_TYPE_MAP = {
     ("Linux", "amd64"): "feyagate-skill-linux-x64",
     ("Darwin", "x86_64"): "feyagate-skill-mac-x64",
     ("Darwin", "arm64"): "feyagate-skill-mac-arm64",
-    ("Windows", "AMD64"): "feyagate-skill-win",
-    ("Windows", "ARM64"): "feyagate-skill-win",
+    # fota.json uses the -x64 suffix for Windows (feyagate-skill-win-x64);
+    # without it the OTA fallback lookup never matches on Windows.
+    ("Windows", "AMD64"): "feyagate-skill-win-x64",
+    ("Windows", "ARM64"): "feyagate-skill-win-x64",
 }
 
 # Platform tag used in GitHub release asset names, e.g. miloco-mcp-server-win-x64-v1.2.16.zip
@@ -59,6 +69,58 @@ def _github_archive_url(version, release_tag):
     ext = "zip" if release_tag.startswith("win") else "tar.gz"
     archive = f"miloco-mcp-server-{release_tag}-v{version}.{ext}"
     return f"{SERVER_RELEASE_BASE}/v{version}/{archive}", archive
+
+
+# Substrings that identify the right asset for a platform, across both the new
+# naming style (miloco-mcp-server-linux-x64-v1.2.16.tar.gz) and the old style
+# (miloco-mcp-server-1.2.17-Linux-x86_64.tar.gz). Used by the GitHub-API
+# fallback so a release published with either convention still resolves.
+_RELEASE_TAG_KEYWORDS = {
+    "linux-x64": (("linux-x64",), ("linux", "x86_64")),
+    "linux-arm64": (("linux-arm64",), ("linux", "aarch64"), ("linux", "arm64")),
+    "mac-x64": (("mac-x64",), ("darwin", "x86_64")),
+    "mac-arm64": (("mac-arm64",), ("darwin", "arm64")),
+    "win-x64": (("win-x64",), ("windows", "x86_64"), ("win", "amd64")),
+    "win-arm64": (("win-arm64",), ("windows", "arm64")),
+}
+
+
+def _resolve_asset_via_api(version, release_tag):
+    """Find the real download URL by querying the GitHub Releases API.
+
+    Fallback for when the conventionally-constructed filename 404s because the
+    release was published with a different naming convention. Matches assets by
+    platform keyword + extension instead of an exact filename.
+
+    Returns:
+        (download_url, archive_name) or (None, None) on any failure.
+    """
+    import json as _json
+    from urllib.request import urlopen
+
+    api = f"https://api.github.com/repos/{SERVER_RELEASE_REPO}/releases/tags/v{version}"
+    try:
+        with urlopen(api, timeout=15) as resp:
+            data = _json.loads(resp.read().decode("utf-8"))
+    except Exception as exc:  # network, 404, JSON — all non-fatal
+        logger.warning("GitHub API asset lookup failed: %s", exc)
+        return None, None
+
+    ext = ".zip" if release_tag.startswith("win") else ".tar.gz"
+    keyword_sets = _RELEASE_TAG_KEYWORDS.get(release_tag)
+    if not keyword_sets:
+        return None, None
+
+    for asset in data.get("assets", []):
+        name = asset.get("name", "")
+        lname = name.lower()
+        if not lname.endswith(ext) or lname.endswith(".sha256"):
+            continue
+        # Asset matches if any keyword set is fully present in the name.
+        for kws in keyword_sets:
+            if all(k in lname for k in kws):
+                return asset.get("browser_download_url", ""), name
+    return None, None
 
 
 def _detect_fota_type():
@@ -450,13 +512,58 @@ def _copy_skill_docs(install_dir):
         logger.warning("Failed to copy skill docs: %s", exc)
 
 
-def do_setup(install_dir=None):
+def _validate_install_dir(install_dir):
+    """Reject dangerous install directories.
+
+    do_setup may rmtree (webui) and overwrite under install_dir, so guard
+    against pointing it at filesystem root, common system dirs, or the bare
+    home directory. install_dir is an already-resolved absolute Path.
+
+    Raises:
+        RuntimeError: if the directory is unsafe.
+    """
+    p = Path(install_dir).resolve()
+    home = Path(os.path.expanduser("~")).resolve()
+
+    # Filesystem / drive root (cross-platform: root's parent is itself).
+    if p.parent == p:
+        raise RuntimeError(f"refusing filesystem root as install dir: {p}")
+
+    # The home directory itself (subdirs like ~/.feyagate are fine).
+    if p == home:
+        raise RuntimeError(
+            f"refusing to install directly into home dir ({home}); "
+            "use a subdirectory such as ~/.feyagate"
+        )
+
+    # Common POSIX system directories (no-op on Windows paths).
+    dangerous = {
+        "/root", "/home", "/usr", "/bin", "/sbin", "/etc", "/var",
+        "/tmp", "/opt", "/lib", "/lib64", "/boot", "/dev", "/proc", "/sys",
+    }
+    if p.as_posix() in dangerous:
+        raise RuntimeError(f"refusing dangerous system directory: {p}")
+
+
+def do_setup(install_dir=None, local_package=None):
     """Download and install the MCP server binary.
+
+    Args:
+        install_dir: Target install directory (default: resolved ~/.feyagate).
+        local_package: Path to a pre-downloaded archive. When given, skips all
+            network access and extracts this archive directly — used by the
+            clone/offline path (scripts/setup.sh) to reuse this one installer
+            instead of a parallel shell implementation.
 
     Returns:
         True on success, False on failure.
     """
     install_dir = resolve_install_dir(install_dir)
+    try:
+        _validate_install_dir(install_dir)
+    except RuntimeError as exc:
+        print(f"ERROR: {exc}")
+        return False
     install_dir.mkdir(parents=True, exist_ok=True)
     # Record the chosen location so start/stop/status find it later.
     save_install_dir(install_dir)
@@ -468,9 +575,37 @@ def do_setup(install_dir=None):
     print(f"  Install:  {install_dir}")
     print()
 
-    # The binary version is pinned to 1.2.16 (the latest available release).
-    # Package versions 1.2.17+ are Python wrapper updates only.
-    version = "1.2.16"
+    # Binary version is pinned in __init__.py (SERVER_BINARY_VERSION), decoupled
+    # from the Python package version. Bump it there only when a binary release
+    # exists for all platforms.
+    version = SERVER_BINARY_VERSION
+
+    # ── Offline path: a local archive was supplied; skip all network access. ──
+    if local_package is not None:
+        archive_path = Path(local_package)
+        if not archive_path.is_file():
+            print(f"\nERROR: local package not found: {archive_path}")
+            return False
+        archive_name = archive_path.name
+        print(f"  Local package: {archive_path}")
+        # Best-effort checksum against a sibling .sha256 sidecar, if present.
+        sidecar = Path(str(archive_path) + ".sha256")
+        if sidecar.is_file():
+            try:
+                want = sidecar.read_text(encoding="utf-8").strip().split()[0].lower()
+                if _sha256(archive_path) == want:
+                    print("  [OK] checksum verified (local .sha256)")
+                else:
+                    print("\nERROR: local package checksum mismatch — refusing to install")
+                    return False
+            except (OSError, IndexError):
+                print("  [!] could not read local .sha256 — skipping integrity check")
+        else:
+            print("  [!] no local checksum — skipping integrity check")
+        return _finish_setup(
+            archive_path, archive_name, install_dir, version,
+            os_name, arch, fota_type,
+        )
 
     # Optionally consult fota.json for an OTA fallback URL + md5 (best-effort).
     fota_url = ""
@@ -521,7 +656,23 @@ def do_setup(install_dir=None):
             downloaded = True
         except RuntimeError as exc:
             print(f"\nWARNING: GitHub download failed: {exc}")
-            if fota_url:
+            # The conventional filename may not exist if this release was
+            # published with a different naming convention. Ask the GitHub API
+            # for the real asset name before giving up on GitHub.
+            api_url, api_name = _resolve_asset_via_api(version, release_tag)
+            if api_url and api_name != archive_name:
+                print(f"  Retrying with resolved asset: {api_name}")
+                try:
+                    archive_name = api_name
+                    archive_path = install_dir / "packages" / archive_name
+                    _download(api_url, archive_path)
+                    download_url = api_url
+                    expected_sha256 = _fetch_sha256(api_url + ".sha256")
+                    downloaded = True
+                except RuntimeError as exc_api:
+                    print(f"  API-resolved download also failed: {exc_api}")
+
+            if not downloaded and fota_url:
                 print(f"  Falling back to OTA server: {fota_url}")
                 try:
                     archive_name = fota_url.rsplit("/", 1)[-1]
@@ -533,17 +684,43 @@ def do_setup(install_dir=None):
                 except RuntimeError as exc2:
                     print(f"\nERROR: {exc2}")
                     return False
-            else:
+
+            if not downloaded:
                 print(f"\nERROR: {exc}")
                 return False
 
         if downloaded:
             ok = _verify(archive_path)
             if ok is False:
-                print("WARNING: checksum mismatch — file may be corrupted")
+                # Corrupt or tampered package: delete and abort rather than
+                # extracting/executing untrusted bytes.
+                try:
+                    archive_path.unlink()
+                except OSError:
+                    pass
+                print(
+                    "\nERROR: checksum mismatch — downloaded package is corrupt "
+                    "or tampered. Deleted. Please re-run setup."
+                )
+                return False
             elif ok is True:
                 print("  [OK] checksum verified")
+            else:
+                print("  [!] no checksum available — skipping integrity check")
 
+    return _finish_setup(
+        archive_path, archive_name, install_dir, version,
+        os_name, arch, fota_type,
+    )
+
+
+def _finish_setup(archive_path, archive_name, install_dir, version,
+                  os_name, arch, fota_type):
+    """Common tail shared by the online and offline setup paths:
+    stop running server → extract → init config → copy docs → write version.
+
+    Returns True on success, False on failure.
+    """
     # Stop running server before overwriting binary
     from .service import _is_running, do_stop
     running, _pid = _is_running()

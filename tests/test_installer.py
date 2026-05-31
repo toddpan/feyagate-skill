@@ -52,13 +52,13 @@ class TestDetectFotaType:
         monkeypatch.setattr("platform.system", lambda: "Windows")
         monkeypatch.setattr("platform.machine", lambda: "AMD64")
         fota_type, os_name, arch = _detect_fota_type()
-        assert fota_type == "feyagate-skill-win"
+        assert fota_type == "feyagate-skill-win-x64"
 
     def test_windows_arm64(self, monkeypatch):
         monkeypatch.setattr("platform.system", lambda: "Windows")
         monkeypatch.setattr("platform.machine", lambda: "ARM64")
         fota_type, os_name, arch = _detect_fota_type()
-        assert fota_type == "feyagate-skill-win"
+        assert fota_type == "feyagate-skill-win-x64"
 
     def test_fallback_unknown_platform(self, monkeypatch):
         """Unknown platform falls back to generic name."""

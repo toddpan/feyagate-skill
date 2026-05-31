@@ -325,7 +325,7 @@ FeyaGate 免费版支持小米平台全功能。涂鸦、美的、易微联需�
 
 ```bash
 pip install --upgrade feyagate-skill
-feyagate upgrade
+feyagate update
 ```
 
 ---

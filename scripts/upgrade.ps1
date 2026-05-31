@@ -193,8 +193,8 @@ $pidFile = Join-Path $DATA_DIR "miloco-mcp-server.pid"
 
 if (Test-Path $pidFile) {
     try {
-        $pid = Get-Content $pidFile
-        $proc = Get-Process -Id $pid -ErrorAction SilentlyContinue
+        $procId = Get-Content $pidFile
+        $proc = Get-Process -Id $procId -ErrorAction SilentlyContinue
         if ($proc) {
             $WAS_RUNNING = $true
             Write-Step "停止服务..."
@@ -204,7 +204,7 @@ if (Test-Path $pidFile) {
                 & cmd /c "scripts\stop.bat" 2>&1 | Out-Null
                 Pop-Location
             } else {
-                Stop-Process -Id $pid -Force -ErrorAction SilentlyContinue
+                Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
                 Start-Sleep -Seconds 2
             }
             Write-Info "服务已停止"

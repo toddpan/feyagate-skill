@@ -103,7 +103,7 @@ Then **restart your AI assistant** and try: *"List my smart home devices."*
 | Camera snapshot | `feyagate snapshot --list` · `feyagate snapshot --camera-id ID --connect` |
 | Scheduled capture | `feyagate scheduled --camera-id ID --interval 300` |
 | Version | `feyagate --version` |
-| Upgrade | `feyagate upgrade` or `pip install --upgrade feyagate-skill` |
+| Update | `feyagate update` or `pip install --upgrade feyagate-skill` |
 
 ## MCP Tools at a Glance
 
@@ -238,7 +238,7 @@ feyagate auth
 | 摄像头抓拍 | `feyagate snapshot --list` · `feyagate snapshot --camera-id ID --connect` |
 | 定时抓拍分析 | `feyagate scheduled --camera-id ID --interval 300` |
 | 查看版本 | `feyagate --version` |
-| 升级 | `feyagate upgrade` 或 `pip install --upgrade feyagate-skill` |
+| 升级 | `feyagate update` 或 `pip install --upgrade feyagate-skill` |
 
 ## MCP 工具一览
 

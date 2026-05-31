@@ -104,6 +104,6 @@ Tests use `pytest` with `unittest.mock`. Key patterns:
 
 ## Gotchas
 
-- `feyagate upgrade` is an alias for `feyagate setup` — both call `installer.do_setup()`.
+- `feyagate update` (alias: `upgrade`, hidden, kept for backward compatibility) is an alias for `feyagate setup` — both call `installer.do_setup()`.
 - `--port` on `start`/`restart` only affects the health-check URL used during startup. The binary always reads its actual listening port from `config.yaml`. To change the port, edit `~/.feyagate/config/config.yaml`.
 - The `scripts/` directory contains both build/publish shell scripts (`build.sh`, `publish.sh`) and standalone Python utility scripts (`snapshot.py`, `auth.py`, `scheduled_analysis.py`) that are not part of the package — they are developer tools.

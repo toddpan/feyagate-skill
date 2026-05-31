@@ -168,7 +168,7 @@ feyagate log         # View server logs
 feyagate log -n 50   # View last 50 lines of logs
 feyagate stop        # Stop service
 feyagate restart     # Restart service
-feyagate upgrade     # Upgrade MCP server to latest version
+feyagate update      # Update MCP server to latest version
 ```
 
 ## Usage Examples
@@ -294,7 +294,7 @@ curl -s -X POST http://localhost:38080/mcp/http \
 | `FeyaGate not installed` | `feyagate setup` |
 | `connection refused` | `feyagate start` |
 | `authorized: false` | `feyagate auth` |
-| `cannot open shared object file` | `feyagate upgrade` or re-run `feyagate setup` |
+| `cannot open shared object file` | `feyagate update` or re-run `feyagate setup` |
 | `Tool not found` | Check tool name with `tools/list` |
 | `key 'device_id' not found` | `device/specs` uses `deviceId`; platform tools use `device_id` |
 | `camera_connect` fails | Check camera native libraries in `lib/` |

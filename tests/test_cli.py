@@ -15,14 +15,14 @@ class TestInstallClaude:
     """Test Claude Code skill symlink installation."""
 
     def test_missing_install_dir(self, tmp_path):
-        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(tmp_path / "nonexistent")):
+        with patch("feyagate_skill.cli.resolve_install_dir", return_value=tmp_path / "nonexistent"):
             assert _install_claude() is False
 
     def test_successful_install(self, tmp_path):
         install_dir = tmp_path / "feyagate"
         install_dir.mkdir()
 
-        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
+        with patch("feyagate_skill.cli.resolve_install_dir", return_value=install_dir), \
              patch("pathlib.Path.home", return_value=tmp_path):
             assert _install_claude() is True
 
@@ -39,7 +39,7 @@ class TestInstallClaude:
         old_target.mkdir()
         (skills_dir / "feyagate").symlink_to(old_target)
 
-        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
+        with patch("feyagate_skill.cli.resolve_install_dir", return_value=install_dir), \
              patch("pathlib.Path.home", return_value=tmp_path):
             assert _install_claude() is True
 
@@ -52,14 +52,14 @@ class TestInstallCursor:
     """Test Cursor skill symlink installation."""
 
     def test_missing_install_dir(self, tmp_path):
-        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(tmp_path / "nonexistent")):
+        with patch("feyagate_skill.cli.resolve_install_dir", return_value=tmp_path / "nonexistent"):
             assert _install_cursor() is False
 
     def test_successful_install(self, tmp_path):
         install_dir = tmp_path / "feyagate"
         install_dir.mkdir()
 
-        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
+        with patch("feyagate_skill.cli.resolve_install_dir", return_value=install_dir), \
              patch("pathlib.Path.home", return_value=tmp_path):
             assert _install_cursor() is True
 
@@ -76,7 +76,7 @@ class TestInstallCursor:
         old_target.mkdir()
         (skills_dir / "feyagate").symlink_to(old_target)
 
-        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
+        with patch("feyagate_skill.cli.resolve_install_dir", return_value=install_dir), \
              patch("pathlib.Path.home", return_value=tmp_path):
             assert _install_cursor() is True
 
@@ -89,14 +89,14 @@ class TestInstallOpenclaw:
     """Test OpenClaw skill symlink installation."""
 
     def test_missing_install_dir(self, tmp_path):
-        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(tmp_path / "nonexistent")):
+        with patch("feyagate_skill.cli.resolve_install_dir", return_value=tmp_path / "nonexistent"):
             assert _install_openclaw() is False
 
     def test_successful_install(self, tmp_path):
         install_dir = tmp_path / "feyagate"
         install_dir.mkdir()
 
-        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
+        with patch("feyagate_skill.cli.resolve_install_dir", return_value=install_dir), \
              patch("pathlib.Path.home", return_value=tmp_path):
             assert _install_openclaw() is True
 
@@ -113,7 +113,7 @@ class TestInstallOpenclaw:
         old_target.mkdir()
         (skills_dir / "feyagate").symlink_to(old_target)
 
-        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
+        with patch("feyagate_skill.cli.resolve_install_dir", return_value=install_dir), \
              patch("pathlib.Path.home", return_value=tmp_path):
             assert _install_openclaw() is True
 
@@ -126,14 +126,14 @@ class TestInstallHermes:
     """Test Hermes Agent skill symlink installation."""
 
     def test_missing_install_dir(self, tmp_path):
-        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(tmp_path / "nonexistent")):
+        with patch("feyagate_skill.cli.resolve_install_dir", return_value=tmp_path / "nonexistent"):
             assert _install_hermes() is False
 
     def test_successful_install(self, tmp_path):
         install_dir = tmp_path / "feyagate"
         install_dir.mkdir()
 
-        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
+        with patch("feyagate_skill.cli.resolve_install_dir", return_value=install_dir), \
              patch("pathlib.Path.home", return_value=tmp_path):
             assert _install_hermes() is True
 
@@ -150,7 +150,7 @@ class TestInstallHermes:
         old_target.mkdir()
         (skills_dir / "feyagate").symlink_to(old_target)
 
-        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
+        with patch("feyagate_skill.cli.resolve_install_dir", return_value=install_dir), \
              patch("pathlib.Path.home", return_value=tmp_path):
             assert _install_hermes() is True
 
@@ -163,14 +163,14 @@ class TestInstallWindsurf:
     """Test Windsurf skill symlink installation."""
 
     def test_missing_install_dir(self, tmp_path):
-        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(tmp_path / "nonexistent")):
+        with patch("feyagate_skill.cli.resolve_install_dir", return_value=tmp_path / "nonexistent"):
             assert _install_windsurf() is False
 
     def test_successful_install(self, tmp_path):
         install_dir = tmp_path / "feyagate"
         install_dir.mkdir()
 
-        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
+        with patch("feyagate_skill.cli.resolve_install_dir", return_value=install_dir), \
              patch("pathlib.Path.home", return_value=tmp_path):
             assert _install_windsurf() is True
 
@@ -187,7 +187,7 @@ class TestInstallWindsurf:
         old_target.mkdir()
         (skills_dir / "feyagate").symlink_to(old_target)
 
-        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
+        with patch("feyagate_skill.cli.resolve_install_dir", return_value=install_dir), \
              patch("pathlib.Path.home", return_value=tmp_path):
             assert _install_windsurf() is True
 
@@ -200,14 +200,14 @@ class TestInstallCopilot:
     """Test GitHub Copilot (VS Code) skill symlink installation."""
 
     def test_missing_install_dir(self, tmp_path):
-        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(tmp_path / "nonexistent")):
+        with patch("feyagate_skill.cli.resolve_install_dir", return_value=tmp_path / "nonexistent"):
             assert _install_copilot() is False
 
     def test_successful_install(self, tmp_path):
         install_dir = tmp_path / "feyagate"
         install_dir.mkdir()
 
-        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
+        with patch("feyagate_skill.cli.resolve_install_dir", return_value=install_dir), \
              patch("pathlib.Path.home", return_value=tmp_path), \
              patch("platform.system", return_value="Linux"):
             assert _install_copilot() is True
@@ -225,7 +225,7 @@ class TestInstallCopilot:
         old_target.mkdir()
         (skills_dir / "feyagate").symlink_to(old_target)
 
-        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
+        with patch("feyagate_skill.cli.resolve_install_dir", return_value=install_dir), \
              patch("pathlib.Path.home", return_value=tmp_path), \
              patch("platform.system", return_value="Linux"):
             assert _install_copilot() is True
@@ -239,14 +239,14 @@ class TestInstallCodex:
     """Test OpenAI Codex CLI skill symlink installation."""
 
     def test_missing_install_dir(self, tmp_path):
-        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(tmp_path / "nonexistent")):
+        with patch("feyagate_skill.cli.resolve_install_dir", return_value=tmp_path / "nonexistent"):
             assert _install_codex() is False
 
     def test_successful_install(self, tmp_path):
         install_dir = tmp_path / "feyagate"
         install_dir.mkdir()
 
-        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
+        with patch("feyagate_skill.cli.resolve_install_dir", return_value=install_dir), \
              patch("pathlib.Path.home", return_value=tmp_path):
             assert _install_codex() is True
 
@@ -263,7 +263,7 @@ class TestInstallCodex:
         old_target.mkdir()
         (skills_dir / "feyagate").symlink_to(old_target)
 
-        with patch("feyagate_skill.cli.DEFAULT_INSTALL_DIR", str(install_dir)), \
+        with patch("feyagate_skill.cli.resolve_install_dir", return_value=install_dir), \
              patch("pathlib.Path.home", return_value=tmp_path):
             assert _install_codex() is True
 

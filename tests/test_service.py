@@ -157,36 +157,29 @@ class TestDoStop:
 
     def test_stop_graceful(self, tmp_path):
         self._setup_pid(tmp_path)
-        call_count = [0]
 
-        def mock_kill(pid, sig):
-            call_count[0] += 1
-            if call_count[0] == 1:
-                return None  # SIGTERM succeeds
-            elif call_count[0] == 2:
-                return None  # check loop: process still alive
-            else:
-                raise ProcessLookupError()  # process exited
+        # _is_running: alive at entry, then dead on the first wait-loop check.
+        running_seq = [(True, 12345), (False, None)]
 
         with patch("feyagate_skill.service._install_dir", return_value=tmp_path), \
-             patch("os.kill", side_effect=mock_kill), \
+             patch("feyagate_skill.service._is_running", side_effect=running_seq), \
+             patch("feyagate_skill.service._terminate", return_value=True) as mock_term, \
              patch("feyagate_skill.service.time.sleep"):
             assert do_stop() is True
+        # Graceful request delivered; no forced kill needed.
+        mock_term.assert_called_once_with(12345, force=False)
 
     def test_stop_force_kill(self, tmp_path):
         self._setup_pid(tmp_path)
-        call_count = [0]
-
-        def mock_kill(pid, sig):
-            call_count[0] += 1
-            return None  # process always "alive" — force kill path
 
         with patch("feyagate_skill.service._install_dir", return_value=tmp_path), \
-             patch("os.kill", side_effect=mock_kill), \
+             patch("feyagate_skill.service._is_running", return_value=(True, 12345)), \
+             patch("feyagate_skill.service._terminate", return_value=True) as mock_term, \
              patch("feyagate_skill.service.time.sleep"):
             assert do_stop() is True
-        # Should have sent SIGTERM + checks + SIGKILL
-        assert call_count[0] >= 2
+        # Process never died → graceful (force=False) then forced (force=True).
+        calls = [c.kwargs.get("force") for c in mock_term.call_args_list]
+        assert True in calls  # a forced kill was attempted
 
 
 class TestDoStatus:
