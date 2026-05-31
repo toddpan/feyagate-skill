@@ -6,6 +6,10 @@ set -euo pipefail
 INSTALL_DIR="${FEYAGATE_INSTALL_DIR:-$HOME/.feyagate}"
 VERBOSE=0
 TOTAL_STEPS=4
+# Exact CLI invocation for the just-installed package, set by install_feyagate.
+# Pins setup/start to the freshly-installed interpreter so a stale `feyagate`
+# on PATH (old conda/pip copy) can't run outdated installer code.
+FEYAGATE_CMD=""
 
 # ── Colors ────────────────────────────────────────────────────────────────────
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
@@ -14,10 +18,27 @@ CYAN='\033[0;36m'; BOLD='\033[1m'; NC='\033[0m'
 info()  { printf "${GREEN}[✓]${NC} %s\n" "$*"; }
 warn()  { printf "${YELLOW}[!]${NC} %s\n" "$*"; }
 error() { printf "${RED}[✗]${NC} %s\n" "$*" >&2; }
+
+CURRENT_STEP=""
+CURRENT_STEP_MSG=""
 step_n() {
     local n="$1"; shift
+    CURRENT_STEP="$n"
+    CURRENT_STEP_MSG="$*"
     printf "\n${CYAN}${BOLD}[${n}/${TOTAL_STEPS}]${NC} %s\n" "$*"
 }
+
+# Safety net: print an actionable message on any unexpected (unguarded) failure
+# under `set -e`. Guarded failures (in if/||/&&/!) do not trigger this trap, and
+# the explicit `error … ; exit 1` paths fire EXIT (not ERR), so this only ever
+# reports genuinely unhandled errors.
+on_error() {
+    local code=$?
+    error "安装意外中断（退出码 ${code}）。"
+    [ -n "$CURRENT_STEP" ] && error "中断位置：第 ${CURRENT_STEP}/${TOTAL_STEPS} 步 — ${CURRENT_STEP_MSG}"
+    error "请检查上方日志后重试；若仍失败，请访问 https://www.feyagate.com 获取帮助。"
+}
+trap on_error ERR
 
 # ── Args ──────────────────────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
@@ -62,9 +83,12 @@ find_python() {
 
 find_pip() {
     local py="$1"
+    # Prefer `$py -m pip`: a bare pip3/pip on PATH may belong to a *different*
+    # interpreter than the one we detected, which would install the package into
+    # the wrong environment (and leave `feyagate` off PATH).
+    "$py" -m pip --version &>/dev/null 2>&1 && { echo "$py -m pip"; return 0; }
     command -v pip3 &>/dev/null && { echo "pip3"; return 0; }
     command -v pip &>/dev/null && { echo "pip"; return 0; }
-    "$py" -m pip --version &>/dev/null 2>&1 && { echo "$py -m pip"; return 0; }
     return 1
 }
 
@@ -80,11 +104,22 @@ install_feyagate() {
     # 1. pipx — cleanest for a CLI tool; sidesteps externally-managed envs.
     if command -v pipx &>/dev/null; then
         info "使用 pipx 安装（隔离环境，推荐）"
+        # `--force` always re-resolves the latest from PyPI and recreates the
+        # launcher shim. Plain `pipx upgrade` silently no-ops on a stale index
+        # ("already at latest") and refuses to fix a broken/foreign shim
+        # ("File exists … Not modifying"), so installed users never upgrade.
+        # --force covers fresh install, upgrade, and shim repair in one step.
         # shellcheck disable=SC2086
-        if pipx list 2>/dev/null | grep -q "$pkg"; then
-            pipx upgrade $vflag "$pkg" && return 0
-        else
-            pipx install $vflag "$pkg" && return 0
+        if pipx install --force $vflag "$pkg"; then
+            # Pin later setup/start to THIS freshly-installed venv, bypassing any
+            # stale `feyagate` shadowing it on PATH (e.g. an old conda/pip copy).
+            local venvs venv_py
+            venvs="$(pipx environment --value PIPX_LOCAL_VENVS 2>/dev/null || true)"
+            venv_py="${venvs}/feyagate-skill/bin/python"
+            if [ -n "$venvs" ] && [ -x "$venv_py" ]; then
+                FEYAGATE_CMD="$venv_py -m feyagate_skill.cli"
+            fi
+            return 0
         fi
         warn "pipx 失败，回退到 pip"
     fi
@@ -98,7 +133,10 @@ install_feyagate() {
     local errlog; errlog="$(mktemp)"
     # shellcheck disable=SC2086
     if $PIP install -U $USER_FLAG $vflag "$pkg" 2>"$errlog"; then
-        rm -f "$errlog"; return 0
+        rm -f "$errlog"
+        # Installed into $PYTHON, so invoke the module through it directly.
+        FEYAGATE_CMD="$PYTHON -m feyagate_skill.cli"
+        return 0
     fi
 
     # 3. PEP 668 externally-managed-environment fallback.
@@ -106,7 +144,9 @@ install_feyagate() {
         warn "检测到系统级 Python (PEP 668)，改用 --break-system-packages"
         # shellcheck disable=SC2086
         if $PIP install -U $USER_FLAG --break-system-packages $vflag "$pkg"; then
-            rm -f "$errlog"; return 0
+            rm -f "$errlog"
+            FEYAGATE_CMD="$PYTHON -m feyagate_skill.cli"
+            return 0
         fi
     else
         cat "$errlog" >&2
@@ -122,7 +162,13 @@ was_running() {
 }
 
 run_feyagate() {
-    if command -v feyagate &>/dev/null; then
+    # Prefer the exact interpreter we just installed into (set by
+    # install_feyagate), so a stale `feyagate` shadowing it on PATH can't run
+    # the old code. Fall back to PATH lookup, then to any python module.
+    if [ -n "${FEYAGATE_CMD:-}" ]; then
+        # shellcheck disable=SC2086
+        $FEYAGATE_CMD "$@"
+    elif command -v feyagate &>/dev/null; then
         feyagate "$@"
     else
         local py
@@ -199,7 +245,9 @@ if ! install_feyagate; then
 fi
 
 command -v feyagate &>/dev/null || export PATH="${HOME}/.local/bin:${PATH}"
-info "命令行工具已就绪 $(feyagate --version 2>/dev/null || true)"
+# Report the version of the copy we actually installed (run_feyagate prefers
+# FEYAGATE_CMD), not whatever stale `feyagate` happens to be first on PATH.
+info "命令行工具已就绪 $(run_feyagate --version 2>/dev/null || true)"
 
 # ── [2/4] stop old service ────────────────────────────────────────────────────
 if was_running; then
@@ -214,13 +262,17 @@ fi
 # ── [3/4] setup ───────────────────────────────────────────────────────────────
 step_n 3 "下载并安装网关程序（约 30MB，请稍候）…"
 
-if ! run_feyagate setup --dir "$INSTALL_DIR"; then
-    error "下载或安装失败。请检查网络后重试。"
+# `feyagate setup` currently exits 0 even on failure, so its exit code is not a
+# reliable success signal. Run it (still surface a hard launch failure), then
+# treat the presence of an executable binary as the authoritative check.
+run_feyagate setup --dir "$INSTALL_DIR" || true
+
+if [ ! -x "$INSTALL_DIR/bin/miloco-mcp-server" ]; then
+    error "网关程序下载或安装失败（未找到可执行文件）。"
+    error "请检查网络后重试：用 --verbose 可查看详细日志。"
     exit 1
 fi
-
-INSTALL_OK=true
-[ -x "$INSTALL_DIR/bin/miloco-mcp-server" ] || INSTALL_OK=false
+info "网关程序已安装"
 
 if [ "$VERBOSE" = 1 ]; then
     [ -f "$INSTALL_DIR/config/config.yaml" ] && info "配置文件已就绪"
@@ -230,19 +282,41 @@ fi
 # ── [4/4] start ───────────────────────────────────────────────────────────────
 step_n 4 "启动智能家居网关服务…"
 
-if run_feyagate start; then
+# `start` also exits 0 unconditionally, so confirm via the PID file instead of
+# the command's exit code.
+run_feyagate start || true
+if was_running; then
     info "服务已启动"
 else
-    warn "自动启动未成功，请手动运行: feyagate start"
+    warn "自动启动未成功，请稍后手动运行: feyagate start"
+    warn "排查命令: feyagate log"
 fi
 
 # ── Done ──────────────────────────────────────────────────────────────────────
 echo ""
 printf "${GREEN}${BOLD}  ✓ 安装完成！${NC}\n"
 
-if [ "$INSTALL_OK" = false ]; then
-    warn "网关程序可能未完整安装，请查看上方报错信息"
-    exit 1
+# Warn if the `feyagate` the user will type next isn't the copy we just
+# installed. Two cases:
+#   (a) not on PATH at all  -> tell them how to add it persistently
+#   (b) on PATH but a DIFFERENT version (an old conda/pip copy shadowing ours)
+#       -> the next-steps commands would silently run stale code
+installed_ver="$(run_feyagate --version 2>/dev/null || true)"
+if ! command -v feyagate &>/dev/null; then
+    echo ""
+    warn "feyagate 命令尚未加入 PATH。请将下面这行加入你的 shell 配置（~/.zshrc 或 ~/.bashrc）："
+    echo "    export PATH=\"\$HOME/.local/bin:\$PATH\""
+    warn "或在当前终端先执行该命令，再运行下面的步骤。"
+else
+    path_ver="$(feyagate --version 2>/dev/null || true)"
+    if [ -n "$installed_ver" ] && [ -n "$path_ver" ] && [ "$path_ver" != "$installed_ver" ]; then
+        echo ""
+        warn "检测到 PATH 中存在另一个旧版 feyagate，可能覆盖刚安装的新版本："
+        warn "    PATH 中的版本: ${path_ver}（位置: $(command -v feyagate)）"
+        warn "    本次安装版本: ${installed_ver}"
+        warn "建议删除旧副本，或确保 ~/.local/bin 在 PATH 中靠前；"
+        warn "否则下面的 feyagate 命令会运行旧版本。"
+    fi
 fi
 
 print_next_steps

@@ -59,15 +59,28 @@ def _detect_release_tag():
     return f"{platform.system().lower()}-x64"
 
 
-def _github_archive_url(version, release_tag):
+def _github_archive_url(version, release_tag, os_name=None, arch=None):
     """Build the GitHub Releases download URL for the server archive.
 
-    Only Windows uses .zip; all Unix platforms (macOS/Linux) use .tar.gz to
-    preserve symlinks, file permissions, and POSIX path separators. A Windows
-    zip built with backslash separators cannot be extracted correctly on Unix.
+    The published assets follow two different conventions (verified against the
+    actual releases), so the constructed name must match per-platform or the
+    primary download 404s and we fall back to a slower GitHub-API lookup:
+
+      - Windows: ``miloco-mcp-server-win-x64-v{version}.zip``  (new tag scheme)
+      - macOS / Linux: ``miloco-mcp-server-{version}-{System}-{machine}.tar.gz``
+        e.g. ``miloco-mcp-server-1.2.17-Darwin-x86_64.tar.gz`` — the legacy
+        ``platform.system()`` / ``platform.machine()`` scheme.
+
+    Unix uses .tar.gz to preserve symlinks, permissions, and POSIX paths; a
+    Windows zip with backslash separators cannot be extracted on Unix.
     """
-    ext = "zip" if release_tag.startswith("win") else "tar.gz"
-    archive = f"miloco-mcp-server-{release_tag}-v{version}.{ext}"
+    if release_tag.startswith("win"):
+        archive = f"miloco-mcp-server-{release_tag}-v{version}.zip"
+    else:
+        # Match the real Unix asset names: {version}-{System}-{machine}.tar.gz.
+        sys_label = os_name or platform.system()
+        mach_label = arch or platform.machine()
+        archive = f"miloco-mcp-server-{version}-{sys_label}-{mach_label}.tar.gz"
     return f"{SERVER_RELEASE_BASE}/v{version}/{archive}", archive
 
 
@@ -620,8 +633,9 @@ def do_setup(install_dir=None, local_package=None):
     except RuntimeError as exc:
         logger.warning("fota.json unavailable, GitHub-only mode: %s", exc)
 
-    # Primary source: GitHub Releases.
-    download_url, archive_name = _github_archive_url(version, release_tag)
+    # Primary source: GitHub Releases. Pass the detected os/arch so the Unix
+    # asset name matches the published {version}-{System}-{machine} convention.
+    download_url, archive_name = _github_archive_url(version, release_tag, os_name, arch)
     expected_sha256 = _fetch_sha256(download_url + ".sha256")
 
     print(f"  Version:      v{version}")
