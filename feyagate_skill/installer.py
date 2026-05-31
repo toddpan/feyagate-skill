@@ -63,17 +63,11 @@ def _detect_release_tag():
 def _github_archive_url(version, release_tag, os_name=None, arch=None):
     """Build the GitHub Releases download URL for the server archive.
 
-    The published assets follow two different conventions (verified against the
-    actual releases), so the constructed name must match per-platform or the
-    primary download 404s and we fall back to a slower GitHub-API lookup:
+    Asset naming convention (unified v1.2.18+):
+      - Windows: ``miloco-mcp-server-win-x64-v{version}.zip``
+      - macOS / Linux: ``miloco-mcp-server-{platformTag}-v{version}.tar.gz``
 
-      - Windows: ``miloco-mcp-server-win-x64-v{version}.zip``  (new tag scheme)
-      - macOS / Linux: ``miloco-mcp-server-{version}-{System}-{machine}.tar.gz``
-        e.g. ``miloco-mcp-server-1.2.17-Darwin-x86_64.tar.gz`` — the legacy
-        ``platform.system()`` / ``platform.machine()`` scheme.
-
-    Unix uses .tar.gz to preserve symlinks, permissions, and POSIX paths; a
-    Windows zip with backslash separators cannot be extracted on Unix.
+    Unix uses .tar.gz to preserve symlinks, permissions, and POSIX paths.
     """
     if release_tag.startswith("win"):
         archive = f"miloco-mcp-server-{release_tag}-v{version}.zip"
