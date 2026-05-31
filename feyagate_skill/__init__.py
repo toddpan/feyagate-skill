@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 
-__version__ = "1.3.0"
+__version__ = "2.1.18"
 __author__ = "panzuji"
 
 DEFAULT_INSTALL_DIR = "~/.feyagate"
@@ -18,7 +18,7 @@ SERVER_RELEASE_BASE = (
 # package __version__: bump this only when a new binary release exists for ALL
 # platforms (mac-x64, mac-arm64, linux-x64, win-x64). Pinned here (not buried in
 # installer.py) so it is the single obvious place to change on a binary release.
-SERVER_BINARY_VERSION = "1.2.18"
+SERVER_BINARY_VERSION = "2.1.18"
 MCP_DEFAULT_PORT = 38080
 MCP_DEFAULT_HOST = "127.0.0.1"
 
