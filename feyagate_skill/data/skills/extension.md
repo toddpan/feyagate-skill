@@ -1,7 +1,12 @@
 ---
-name: feyagate-extension
-parent: feyagate
-description: Hardware extension tools. Serial (RS485/UART), GPIO, Xiaozhi AI, license, config, stats. Use when working with serial devices, GPIO pins, or system configuration.
+name: extension
+description: Hardware extension tools. Serial (RS485/UART), GPIO, Xiaozhi AI, license, config, stats.
+version: 1.2.31
+metadata:
+  openclaw:
+    requires:
+      bins:
+        - curl
 ---
 
 # Hardware Extension & Integration Tools

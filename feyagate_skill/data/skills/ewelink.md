@@ -1,7 +1,12 @@
 ---
-name: feyagate-ewelink
-parent: feyagate
-description: eWeLink platform tools. Account/password auth, read/write device properties for Sonoff and eWeLink devices. Use when working with eWeLink app or Sonoff switches.
+name: ewelink
+description: eWeLink platform tools. Account/password auth, read/write device properties for Sonoff and eWeLink devices.
+version: 1.2.31
+metadata:
+  openclaw:
+    requires:
+      bins:
+        - curl
 ---
 
 # eWeLink Platform Tools

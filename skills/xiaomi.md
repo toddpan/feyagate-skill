@@ -1,7 +1,12 @@
 ---
 name: feyagate-xiaomi
-parent: feyagate
 description: Xiaomi/Mi Home platform tools. MIOT device control, OAuth auth, camera P2P, XiaoAI speaker TTS/music. Use when controlling Xiaomi devices, cameras, or XiaoAI speakers.
+version: 1.2.31
+metadata:
+  openclaw:
+    requires:
+      bins:
+        - curl
 ---
 
 # Xiaomi Platform Tools

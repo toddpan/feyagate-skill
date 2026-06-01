@@ -1,7 +1,12 @@
 ---
-name: feyagate-automation
-parent: feyagate
-description: Automation tools. Schedule tasks, trigger engine, room management, memory/note system, skill management. Use when setting up scheduled actions, automation, rooms, or persistent memory.
+name: automation
+description: Automation tools. Schedule tasks, trigger engine, room management, memory/note system, skill management.
+version: 1.2.31
+metadata:
+  openclaw:
+    requires:
+      bins:
+        - curl
 ---
 
 # Automation & Utility Tools

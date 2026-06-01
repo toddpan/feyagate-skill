@@ -1,7 +1,12 @@
 ---
-name: feyagate-midea
-parent: feyagate
-description: Midea platform tools. Account/password auth, read/write device properties (AC, appliances). Use when working with Midea smart appliances or air conditioners.
+name: midea
+description: Midea platform tools. Account/password auth, read/write device properties (AC, appliances).
+version: 1.2.31
+metadata:
+  openclaw:
+    requires:
+      bins:
+        - curl
 ---
 
 # Midea Platform Tools

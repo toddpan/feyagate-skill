@@ -1,7 +1,12 @@
 ---
-name: feyagate-tuya
-parent: feyagate
-description: Tuya/Smart Life platform tools. QR code auth, device DP property read/write. Use when working with Tuya devices or Smart Life app.
+name: tuya
+description: Tuya/Smart Life platform tools. QR code auth, device DP property read/write.
+version: 1.2.31
+metadata:
+  openclaw:
+    requires:
+      bins:
+        - curl
 ---
 
 # Tuya Platform Tools
