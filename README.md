@@ -168,13 +168,25 @@ MIT License
 - **记忆** — AI 可记住你的习惯和笔记
 - **支持 8 款 AI 助手** — Cursor、Claude Code、OpenClaw、Codex、Windsurf、Copilot、Hermes、小智AI
 
-## 快速开始
+## 🚀 快速开始
 
 **准备：** 一台 Mac / Linux / Windows 电脑 · 已安装 [Python 3.9+](https://www.python.org/downloads/) · 能打开「终端」或 PowerShell
 
-### 方式一：一条命令自动安装（推荐）
+---
 
-**复制下面整行**，粘贴到终端里按回车，等几分钟即可：
+### 🤖 让 AI 帮你安装和配置（推荐）
+
+最简单的方式 — 把下面这段话发给 **Claude Code** 或任意 AI 编程助手，它会自动帮你完成所有安装和配置：
+
+```
+请阅读 https://github.com/toddpan/feyagate-skill/blob/main/QUICKSTART.md 并按照指南在我的机器上安装和配置 FeyaGate Skill。
+```
+
+支持的 AI 助手：Cursor、Claude Code、OpenClaw、Codex、Windsurf、Copilot、Hermes、小智AI
+
+---
+
+### 方式一：一条命令自动安装
 
 **Mac / Linux** — 打开「**终端**」（Mac 可按 `Command + 空格`，搜索「终端」）：
 
@@ -189,11 +201,6 @@ iwr -useb https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/
 ```
 
 > 还没有 Python？到 [python.org](https://www.python.org/downloads/) 下载安装；Windows 安装时务必勾选 **Add Python to PATH**。
-
-> **想让 AI 帮你装？** 把下面这段话发给 Cursor、Claude 等 AI 助手：
-```bash
-请阅读 https://github.com/toddpan/feyagate-skill/blob/main/QUICKSTART.md 并按照指南在我的机器上安装和配置 FeyaGate Skill。
-```
 
 ### 方式二：从 PyPI 安装（逐步执行）
 
