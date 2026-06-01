@@ -6,10 +6,6 @@ set -euo pipefail
 INSTALL_DIR="${FEYAGATE_INSTALL_DIR:-$HOME/.feyagate}"
 VERBOSE=0
 TOTAL_STEPS=4
-# Exact CLI invocation for the just-installed package, set by install_feyagate.
-# Pins setup/start to the freshly-installed interpreter so a stale `feyagate`
-# on PATH (old conda/pip copy) can't run outdated installer code.
-FEYAGATE_CMD=""
 
 # ── Colors ────────────────────────────────────────────────────────────────────
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
@@ -28,10 +24,7 @@ step_n() {
     printf "\n${CYAN}${BOLD}[${n}/${TOTAL_STEPS}]${NC} %s\n" "$*"
 }
 
-# Safety net: print an actionable message on any unexpected (unguarded) failure
-# under `set -e`. Guarded failures (in if/||/&&/!) do not trigger this trap, and
-# the explicit `error … ; exit 1` paths fire EXIT (not ERR), so this only ever
-# reports genuinely unhandled errors.
+# Safety net
 on_error() {
     local code=$?
     error "安装意外中断（退出码 ${code}）。"
@@ -83,69 +76,40 @@ find_python() {
 
 find_pip() {
     local py="$1"
-    # Prefer `$py -m pip`: a bare pip3/pip on PATH may belong to a *different*
-    # interpreter than the one we detected, which would install the package into
-    # the wrong environment (and leave `feyagate` off PATH).
     "$py" -m pip --version &>/dev/null 2>&1 && { echo "$py -m pip"; return 0; }
     command -v pip3 &>/dev/null && { echo "pip3"; return 0; }
     command -v pip &>/dev/null && { echo "pip"; return 0; }
     return 1
 }
 
-# Install or upgrade feyagate-skill using the best available method.
-# Order: pipx (isolated venv, immune to PEP 668, ideal for a CLI tool) →
-#        pip -U --user → pip -U --user --break-system-packages (PEP 668 fallback).
-# Relies on globals PIP, USER_FLAG, VERBOSE, PYTHON (resolved at call time).
 install_feyagate() {
     local pkg="feyagate-skill"
     local vflag=""
-    [ "$VERBOSE" = 1 ] && vflag="--verbose"
+    [ "$VERBOSE" = 1 ] && vflag="-v"
 
-    # 1. pipx — cleanest for a CLI tool; sidesteps externally-managed envs.
-    if command -v pipx &>/dev/null; then
-        info "使用 pipx 安装（隔离环境，推荐）"
-        # `--force` always re-resolves the latest from PyPI and recreates the
-        # launcher shim. Plain `pipx upgrade` silently no-ops on a stale index
-        # ("already at latest") and refuses to fix a broken/foreign shim
-        # ("File exists … Not modifying"), so installed users never upgrade.
-        # --force covers fresh install, upgrade, and shim repair in one step.
-        # shellcheck disable=SC2086
-        if pipx install --force $vflag "$pkg"; then
-            # Pin later setup/start to THIS freshly-installed venv, bypassing any
-            # stale `feyagate` shadowing it on PATH (e.g. an old conda/pip copy).
-            local venvs venv_py
-            venvs="$(pipx environment --value PIPX_LOCAL_VENVS 2>/dev/null || true)"
-            venv_py="${venvs}/feyagate-skill/bin/python"
-            if [ -n "$venvs" ] && [ -x "$venv_py" ]; then
-                FEYAGATE_CMD="$venv_py -m feyagate_skill.cli"
-            fi
-            return 0
-        fi
-        warn "pipx 失败，回退到 pip"
+    PYTHON="$(find_python)" || { error "未找到 Python"; return 1; }
+
+    PIP="$(find_pip "$PYTHON")" || { error "未找到 pip"; return 1; }
+
+    # 检测是否在虚拟环境内（venv/conda）
+    local USER_FLAG=""
+    if "$PYTHON" -c 'import sys; sys.exit(0 if (sys.prefix != sys.base_prefix or hasattr(sys,"real_prefix")) else 1)' 2>/dev/null; then
+        USER_FLAG=""
     fi
 
-    if [ -z "$PIP" ]; then
-        error "未找到 pip，请运行: $PYTHON -m ensurepip --upgrade"
-        return 1
-    fi
-
-    # 2. pip -U (+ --user unless inside a virtualenv where --user is invalid).
     local errlog; errlog="$(mktemp)"
     # shellcheck disable=SC2086
     if $PIP install -U $USER_FLAG $vflag "$pkg" 2>"$errlog"; then
         rm -f "$errlog"
-        # Installed into $PYTHON, so invoke the module through it directly.
-        FEYAGATE_CMD="$PYTHON -m feyagate_skill.cli"
         return 0
     fi
 
-    # 3. PEP 668 externally-managed-environment fallback.
+    # PEP 668 fallback
     if grep -q "externally-managed" "$errlog" 2>/dev/null; then
         warn "检测到系统级 Python (PEP 668)，改用 --break-system-packages"
         # shellcheck disable=SC2086
         if $PIP install -U $USER_FLAG --break-system-packages $vflag "$pkg"; then
             rm -f "$errlog"
-            FEYAGATE_CMD="$PYTHON -m feyagate_skill.cli"
             return 0
         fi
     else
@@ -162,13 +126,7 @@ was_running() {
 }
 
 run_feyagate() {
-    # Prefer the exact interpreter we just installed into (set by
-    # install_feyagate), so a stale `feyagate` shadowing it on PATH can't run
-    # the old code. Fall back to PATH lookup, then to any python module.
-    if [ -n "${FEYAGATE_CMD:-}" ]; then
-        # shellcheck disable=SC2086
-        $FEYAGATE_CMD "$@"
-    elif command -v feyagate &>/dev/null; then
+    if command -v feyagate &>/dev/null; then
         feyagate "$@"
     else
         local py
@@ -215,28 +173,7 @@ echo "    ② 下载智能家居网关程序"
 echo "    ③ 启动后台服务"
 echo ""
 
-PYTHON="$(find_python)" || {
-    error "未检测到 Python。请先安装 Python 3.9+："
-    echo "       https://www.python.org/downloads/"
-    exit 1
-}
-
-if ! "$PYTHON" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)' 2>/dev/null; then
-    error "Python 版本过低，需要 3.9 或更高（当前: $("$PYTHON" --version 2>&1)）"
-    exit 1
-fi
-
-# pip is optional when pipx is present; don't hard-fail here.
-PIP="$(find_pip "$PYTHON" || true)"
-
-# --user is invalid inside a virtualenv/conda env; only pass it for a system Python.
-USER_FLAG="--user"
-if "$PYTHON" -c 'import sys; sys.exit(0 if (sys.prefix != sys.base_prefix or hasattr(sys,"real_prefix")) else 1)' 2>/dev/null; then
-    USER_FLAG=""   # inside a venv: install into the venv, not --user
-fi
-[ -n "${VIRTUAL_ENV:-}" ] && USER_FLAG=""
-
-# ── [1/4] pip ─────────────────────────────────────────────────────────────────
+# ── [1/4] pip install ─────────────────────────────────────────────────────────
 step_n 1 "安装 feyagate 命令行工具…"
 
 if ! install_feyagate; then
@@ -245,8 +182,6 @@ if ! install_feyagate; then
 fi
 
 command -v feyagate &>/dev/null || export PATH="${HOME}/.local/bin:${PATH}"
-# Report the version of the copy we actually installed (run_feyagate prefers
-# FEYAGATE_CMD), not whatever stale `feyagate` happens to be first on PATH.
 info "命令行工具已就绪 $(run_feyagate --version 2>/dev/null || true)"
 
 # ── [2/4] stop old service ────────────────────────────────────────────────────
@@ -262,9 +197,6 @@ fi
 # ── [3/4] setup ───────────────────────────────────────────────────────────────
 step_n 3 "下载并安装网关程序（约 30MB，请稍候）…"
 
-# `feyagate setup` currently exits 0 even on failure, so its exit code is not a
-# reliable success signal. Run it (still surface a hard launch failure), then
-# treat the presence of an executable binary as the authoritative check.
 run_feyagate setup --dir "$INSTALL_DIR" || true
 
 if [ ! -x "$INSTALL_DIR/bin/miloco-mcp-server" ]; then
@@ -282,8 +214,6 @@ fi
 # ── [4/4] start ───────────────────────────────────────────────────────────────
 step_n 4 "启动智能家居网关服务…"
 
-# `start` also exits 0 unconditionally, so confirm via the PID file instead of
-# the command's exit code.
 run_feyagate start || true
 if was_running; then
     info "服务已启动"
@@ -296,11 +226,7 @@ fi
 echo ""
 printf "${GREEN}${BOLD}  ✓ 安装完成！${NC}\n"
 
-# Warn if the `feyagate` the user will type next isn't the copy we just
-# installed. Two cases:
-#   (a) not on PATH at all  -> tell them how to add it persistently
-#   (b) on PATH but a DIFFERENT version (an old conda/pip copy shadowing ours)
-#       -> the next-steps commands would silently run stale code
+# 检查 PATH 中的 feyagate 版本是否一致
 installed_ver="$(run_feyagate --version 2>/dev/null || true)"
 if ! command -v feyagate &>/dev/null; then
     echo ""
