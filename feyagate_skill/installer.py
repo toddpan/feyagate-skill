@@ -64,16 +64,15 @@ def _github_archive_url(version, release_tag, os_name=None, arch=None):
     """Build the GitHub Releases download URL for the server archive.
 
     Asset naming convention (unified v1.2.18+):
-      - Windows: ``miloco-mcp-server-win-x64-v{version}.zip``
-      - macOS / Linux: ``miloco-mcp-server-{platformTag}-v{version}.tar.gz``
+      - Windows:  ``miloco-mcp-server-win-x64-v{version}.zip``
+      - macOS:    ``miloco-mcp-server-mac-{x64,arm64}-v{version}.zip``
+      - Linux:    ``miloco-mcp-server-linux-{x64,arm64}-v{version}.tar.gz``
 
-    Unix uses .tar.gz to preserve symlinks, permissions, and POSIX paths.
+    Unix/mac uses .zip on GitHub (zip format); Linux uses .tar.gz (tar.gz format).
     """
-    if release_tag.startswith("win"):
+    if release_tag.startswith("win") or release_tag.startswith("mac"):
         archive = f"miloco-mcp-server-{release_tag}-v{version}.zip"
     else:
-        # 统一命名格式: miloco-mcp-server-{platformTag}-v{version}.tar.gz
-        # 与 download-server.js (miloco-mcp-server-{platformTag}-v{version}.zip) 一致
         archive = f"miloco-mcp-server-{release_tag}-v{version}.tar.gz"
     return f"{SERVER_RELEASE_BASE}/v{version}/{archive}", archive
 
