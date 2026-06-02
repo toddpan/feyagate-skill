@@ -3,9 +3,29 @@
 # curl -fsSL https://raw.githubusercontent.com/toddpan/feyagate-skill/main/scripts/install.sh | bash
 set -euo pipefail
 
+# Guard against environment leakage
+if [ -n "${PYTHONPATH:-}" ]; then
+    echo "⚠ Ignoring inherited PYTHONPATH during install to avoid module shadowing"
+    unset PYTHONPATH
+fi
+if [ -n "${PYTHONHOME:-}" ]; then
+    echo "⚠ Ignoring inherited PYTHONHOME during install"
+    unset PYTHONHOME
+fi
+
 INSTALL_DIR="${FEYAGATE_INSTALL_DIR:-$HOME/.feyagate}"
 VERBOSE=0
 TOTAL_STEPS=4
+JSON_OUTPUT=false
+STAGE_NAME=""
+NON_INTERACTIVE=false
+
+# Detect non-interactive mode (e.g. curl | bash)
+if [ -t 0 ]; then
+    IS_INTERACTIVE=true
+else
+    IS_INTERACTIVE=false
+fi
 
 # ── Colors ────────────────────────────────────────────────────────────────────
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
@@ -24,12 +44,38 @@ step_n() {
     printf "\n${CYAN}${BOLD}[${n}/${TOTAL_STEPS}]${NC} %s\n" "$*"
 }
 
+json_escape() {
+    printf '%s' "$1" | tr '\n' ' ' | sed \
+        -e 's/\\/\\\\/g' \
+        -e 's/"/\\"/g'
+}
+
+emit_manifest() {
+    printf '%s' '{"protocol_version":1,"stages":[{"name":"install-cli","title":"安装命令行工具","category":"runtime","needs_user_input":false},{"name":"stop-service","title":"停止旧服务","category":"runtime","needs_user_input":false},{"name":"download-binary","title":"下载网关程序","category":"runtime","needs_user_input":false},{"name":"start-service","title":"启动服务","category":"runtime","needs_user_input":false}]}'
+    printf '\n'
+}
+
+emit_stage_json() {
+    local stage="$1"
+    local ok="$2"
+    local skipped="${3:-false}"
+    local reason="${4:-}"
+    local escaped_reason
+    escaped_reason="$(json_escape "$reason")"
+    if [ -n "$escaped_reason" ]; then
+        printf '{"ok":%s,"stage":"%s","skipped":%s,"reason":"%s"}\n' "$ok" "$stage" "$skipped" "$escaped_reason"
+    else
+        printf '{"ok":%s,"stage":"%s","skipped":%s}\n' "$ok" "$stage" "$skipped"
+    fi
+}
+
 # Safety net
 on_error() {
     local code=$?
     error "安装意外中断（退出码 ${code}）。"
     [ -n "$CURRENT_STEP" ] && error "中断位置：第 ${CURRENT_STEP}/${TOTAL_STEPS} 步 — ${CURRENT_STEP_MSG}"
     error "请检查上方日志后重试；若仍失败，请访问 https://www.feyagate.com 获取帮助。"
+    [ "$JSON_OUTPUT" = true ] && [ -n "$STAGE_NAME" ] && emit_stage_json "$STAGE_NAME" false false "exit code $code"
 }
 trap on_error ERR
 
@@ -38,6 +84,10 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         --dir)     INSTALL_DIR="$2"; shift 2 ;;
         --verbose) VERBOSE=1; shift ;;
+        --manifest) emit_manifest; exit 0 ;;
+        --stage) STAGE_NAME="$2"; shift 2 ;;
+        --json) JSON_OUTPUT=true; shift ;;
+        --non-interactive) NON_INTERACTIVE=true; shift ;;
         -h|--help)
             cat <<'EOF'
 FeyaGate 一键安装
@@ -47,8 +97,12 @@ FeyaGate 一键安装
 自动完成：安装命令行工具 → 下载网关程序 → 启动服务
 
 选项:
-  --dir <路径>   安装目录（默认 ~/.feyagate）
-  --verbose      显示详细日志
+  --dir <路径>        安装目录（默认 ~/.feyagate）
+  --verbose           显示详细日志
+  --manifest          输出安装阶段清单（JSON 格式）
+  --stage <名称>      仅运行指定阶段
+  --json              输出 JSON 格式结果（配合 --stage）
+  --non-interactive   非交互模式
 EOF
             exit 0 ;;
         *) error "未知参数: $1（可用 --help 查看帮助）"; exit 1 ;;
@@ -74,6 +128,22 @@ find_python() {
     return 1
 }
 
+find_uv() {
+    if command -v uv &>/dev/null; then
+        echo "uv"
+        return 0
+    fi
+    if [ -x "$HOME/.local/bin/uv" ]; then
+        echo "$HOME/.local/bin/uv"
+        return 0
+    fi
+    if [ -x "$HOME/.cargo/bin/uv" ]; then
+        echo "$HOME/.cargo/bin/uv"
+        return 0
+    fi
+    return 1
+}
+
 find_pip() {
     local py="$1"
     "$py" -m pip --version &>/dev/null 2>&1 && { echo "$py -m pip"; return 0; }
@@ -87,12 +157,29 @@ install_feyagate() {
     local vflag=""
     [ "$VERBOSE" = 1 ] && vflag="-v"
 
-    PYTHON="$(find_python)" || { error "未找到 Python"; return 1; }
+    # Try uv first if available
+    if UV_CMD="$(find_uv)"; then
+        info "检测到 uv，使用快速安装模式"
+        local errlog; errlog="$(mktemp)"
+        # shellcheck disable=SC2086
+        if $UV_CMD pip install --system -U $vflag "$pkg" 2>"$errlog"; then
+            rm -f "$errlog"
+            return 0
+        else
+            warn "uv 安装失败，切换到 pip"
+            if [ "$VERBOSE" = 1 ]; then
+                cat "$errlog" >&2
+            fi
+            rm -f "$errlog"
+        fi
+    fi
 
+    # Fallback to pip
+    PYTHON="$(find_python)" || { error "未找到 Python"; return 1; }
     PIP="$(find_pip "$PYTHON")" || { error "未找到 pip"; return 1; }
 
     # 检测是否在虚拟环境内（venv/conda）
-    local USER_FLAG=""
+    local USER_FLAG="--user"
     if "$PYTHON" -c 'import sys; sys.exit(0 if (sys.prefix != sys.base_prefix or hasattr(sys,"real_prefix")) else 1)' 2>/dev/null; then
         USER_FLAG=""
     fi
@@ -108,13 +195,14 @@ install_feyagate() {
     if grep -q "externally-managed" "$errlog" 2>/dev/null; then
         warn "检测到系统级 Python (PEP 668)，改用 --break-system-packages"
         # shellcheck disable=SC2086
-        if $PIP install -U $USER_FLAG --break-system-packages $vflag "$pkg"; then
+        if $PIP install -U $USER_FLAG --break-system-packages $vflag "$pkg" 2>"$errlog"; then
             rm -f "$errlog"
             return 0
         fi
-    else
-        cat "$errlog" >&2
     fi
+
+    error "pip 安装失败，详细日志："
+    sed 's/^/    /' "$errlog" >&2
     rm -f "$errlog"
     return 1
 }
@@ -154,6 +242,81 @@ print_next_steps() {
     echo ""
 }
 
+stage_install_cli() {
+    step_n 1 "安装 feyagate 命令行工具…"
+    if ! install_feyagate; then
+        error "安装失败。请检查网络，或稍后重试。"
+        [ "$JSON_OUTPUT" = true ] && emit_stage_json "install-cli" false false "install failed"
+        return 1
+    fi
+    command -v feyagate &>/dev/null || export PATH="${HOME}/.local/bin:${PATH}"
+    info "命令行工具已就绪 $(run_feyagate --version 2>/dev/null || true)"
+    [ "$JSON_OUTPUT" = true ] && emit_stage_json "install-cli" true false
+    return 0
+}
+
+stage_stop_service() {
+    if was_running; then
+        step_n 2 "更新前先停止旧服务…"
+        run_feyagate stop 2>/dev/null || true
+        info "旧服务已停止"
+        [ "$JSON_OUTPUT" = true ] && emit_stage_json "stop-service" true false
+    else
+        step_n 2 "准备安装网关程序…"
+        info "跳过（无正在运行的服务）"
+        [ "$JSON_OUTPUT" = true ] && emit_stage_json "stop-service" true true "no running service"
+    fi
+    return 0
+}
+
+stage_download_binary() {
+    step_n 3 "下载并安装网关程序（约 30MB，请稍候）…"
+    run_feyagate setup --dir "$INSTALL_DIR" || true
+    if [ ! -x "$INSTALL_DIR/bin/miloco-mcp-server" ]; then
+        error "网关程序下载或安装失败（未找到可执行文件）。"
+        error "请检查网络后重试：用 --verbose 可查看详细日志。"
+        [ "$JSON_OUTPUT" = true ] && emit_stage_json "download-binary" false false "binary not found"
+        return 1
+    fi
+    info "网关程序已安装"
+    if [ "$VERBOSE" = 1 ]; then
+        [ -f "$INSTALL_DIR/config/config.yaml" ] && info "配置文件已就绪"
+        [ -d "$INSTALL_DIR/webui" ] && info "管理页面已就绪"
+    fi
+    [ "$JSON_OUTPUT" = true ] && emit_stage_json "download-binary" true false
+    return 0
+}
+
+stage_start_service() {
+    step_n 4 "启动智能家居网关服务…"
+    run_feyagate start || true
+    if was_running; then
+        info "服务已启动"
+        [ "$JSON_OUTPUT" = true ] && emit_stage_json "start-service" true false
+    else
+        warn "自动启动未成功，请稍后手动运行: feyagate start"
+        warn "排查命令: feyagate log"
+        [ "$JSON_OUTPUT" = true ] && emit_stage_json "start-service" false false "service not running"
+    fi
+    return 0
+}
+
+# ── Stage mode ────────────────────────────────────────────────────────────────
+if [ -n "$STAGE_NAME" ]; then
+    case "$STAGE_NAME" in
+        install-cli) stage_install_cli ;;
+        stop-service) stage_stop_service ;;
+        download-binary) stage_download_binary ;;
+        start-service) stage_start_service ;;
+        *)
+            error "未知阶段: $STAGE_NAME"
+            [ "$JSON_OUTPUT" = true ] && emit_stage_json "$STAGE_NAME" false false "unknown stage"
+            exit 1
+            ;;
+    esac
+    exit $?
+fi
+
 # ── Welcome ───────────────────────────────────────────────────────────────────
 printf "\n${BOLD}${CYAN}"
 cat <<'BANNER'
@@ -173,54 +336,11 @@ echo "    ② 下载智能家居网关程序"
 echo "    ③ 启动后台服务"
 echo ""
 
-# ── [1/4] pip install ─────────────────────────────────────────────────────────
-step_n 1 "安装 feyagate 命令行工具…"
-
-if ! install_feyagate; then
-    error "安装失败。请检查网络，或稍后重试。"
-    exit 1
-fi
-
-command -v feyagate &>/dev/null || export PATH="${HOME}/.local/bin:${PATH}"
-info "命令行工具已就绪 $(run_feyagate --version 2>/dev/null || true)"
-
-# ── [2/4] stop old service ────────────────────────────────────────────────────
-if was_running; then
-    step_n 2 "更新前先停止旧服务…"
-    run_feyagate stop 2>/dev/null || true
-    info "旧服务已停止"
-else
-    step_n 2 "准备安装网关程序…"
-    info "跳过（无正在运行的服务）"
-fi
-
-# ── [3/4] setup ───────────────────────────────────────────────────────────────
-step_n 3 "下载并安装网关程序（约 30MB，请稍候）…"
-
-run_feyagate setup --dir "$INSTALL_DIR" || true
-
-if [ ! -x "$INSTALL_DIR/bin/miloco-mcp-server" ]; then
-    error "网关程序下载或安装失败（未找到可执行文件）。"
-    error "请检查网络后重试：用 --verbose 可查看详细日志。"
-    exit 1
-fi
-info "网关程序已安装"
-
-if [ "$VERBOSE" = 1 ]; then
-    [ -f "$INSTALL_DIR/config/config.yaml" ] && info "配置文件已就绪"
-    [ -d "$INSTALL_DIR/webui" ] && info "管理页面已就绪"
-fi
-
-# ── [4/4] start ───────────────────────────────────────────────────────────────
-step_n 4 "启动智能家居网关服务…"
-
-run_feyagate start || true
-if was_running; then
-    info "服务已启动"
-else
-    warn "自动启动未成功，请稍后手动运行: feyagate start"
-    warn "排查命令: feyagate log"
-fi
+# ── Run all stages ────────────────────────────────────────────────────────────
+stage_install_cli || exit 1
+stage_stop_service || exit 1
+stage_download_binary || exit 1
+stage_start_service || exit 1
 
 # ── Done ──────────────────────────────────────────────────────────────────────
 echo ""
