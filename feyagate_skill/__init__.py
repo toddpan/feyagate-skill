@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 
-__version__ = "1.2.31"
+__version__ = "1.2.33"
 __author__ = "panzuji"
 
 DEFAULT_INSTALL_DIR = "~/.feyagate"
@@ -19,6 +19,26 @@ SERVER_RELEASE_BASE = (
 # platforms (mac-x64, mac-arm64, linux-x64, win-x64). Pinned here (not buried in
 # installer.py) so it is the single obvious place to change on a binary release.
 SERVER_BINARY_VERSION = "1.2.17"
+# Temporary release switch: some GitHub assets do not publish a matching
+# .sha256 file, so checksum verification is disabled for this version.
+VERIFY_MILOCO_CHECKSUM = False
+# Manually maintained archive filename templates for each published
+# miloco-mcp-server build. Usually only SERVER_BINARY_VERSION needs to change;
+# touch this map only if the upstream filename pattern changes again.
+MILOCO_DOWNLOAD_FILES = {
+    ("Linux", "x86_64"): "miloco-mcp-server-linux-x64-v{version}.tar.gz",
+    ("Linux", "amd64"): "miloco-mcp-server-linux-x64-v{version}.tar.gz",
+    ("Linux", "aarch64"): "miloco-mcp-server-linux-arm64-v{version}.tar.gz",
+    ("Linux", "arm64"): "miloco-mcp-server-linux-arm64-v{version}.tar.gz",
+    ("Darwin", "x86_64"): "miloco-mcp-server-mac-x64-v{version}.zip",
+    ("Darwin", "arm64"): "miloco-mcp-server-mac-arm64-v{version}.zip",
+    ("Windows", "AMD64"): "miloco-mcp-server-win-x64-v{version}.zip",
+    ("Windows", "ARM64"): "miloco-mcp-server-win-x64-v{version}.zip",
+}
+MILOCO_DOWNLOAD_URLS = {
+    key: f"{SERVER_RELEASE_BASE}/v{SERVER_BINARY_VERSION}/{template.format(version=SERVER_BINARY_VERSION)}"
+    for key, template in MILOCO_DOWNLOAD_FILES.items()
+}
 MCP_DEFAULT_PORT = 38080
 MCP_DEFAULT_HOST = "127.0.0.1"
 
@@ -70,6 +90,9 @@ __all__ = [
     "SERVER_RELEASE_REPO",
     "SERVER_RELEASE_BASE",
     "SERVER_BINARY_VERSION",
+    "VERIFY_MILOCO_CHECKSUM",
+    "MILOCO_DOWNLOAD_FILES",
+    "MILOCO_DOWNLOAD_URLS",
     "MCP_DEFAULT_PORT",
     "MCP_DEFAULT_HOST",
     "resolve_install_dir",
