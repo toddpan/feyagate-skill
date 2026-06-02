@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 
-__version__ = "1.2.33"
+__version__ = "1.3.1"
 __author__ = "panzuji"
 
 DEFAULT_INSTALL_DIR = "~/.feyagate"
@@ -19,9 +19,18 @@ SERVER_RELEASE_BASE = (
 # platforms (mac-x64, mac-arm64, linux-x64, win-x64). Pinned here (not buried in
 # installer.py) so it is the single obvious place to change on a binary release.
 SERVER_BINARY_VERSION = "1.2.17"
-# Temporary release switch: some GitHub assets do not publish a matching
-# .sha256 file, so checksum verification is disabled for this version.
-VERIFY_MILOCO_CHECKSUM = False
+# SHA256 checksums for miloco-mcp-server v1.2.17 binaries
+VERIFY_MILOCO_CHECKSUM = True
+MILOCO_SHA256 = {
+    ("Linux", "x86_64"): "22a8022f805715107cbcff3ba42764af62222fbfb1e3b898654d66823364ccdc",
+    ("Linux", "amd64"): "22a8022f805715107cbcff3ba42764af62222fbfb1e3b898654d66823364ccdc",
+    ("Linux", "aarch64"): "b2166317867d4e4b4ef9a0c4f8554deef0132b6d3cd382e6a8acef72d689c7ca",
+    ("Linux", "arm64"): "b2166317867d4e4b4ef9a0c4f8554deef0132b6d3cd382e6a8acef72d689c7ca",
+    ("Darwin", "x86_64"): "4235171f4fda6f9edec2a5f6ff4e42750475372f0eb58965c6ca11f4a9b2132f",
+    ("Darwin", "arm64"): "473e53379fe3c609fc5f682b01b28247e8e8685dc428dfff507efbb4408b0e7d",
+    ("Windows", "AMD64"): "76a441627d5ec42a780a9fedf92d34fd5b7657b630679bbaaa92092eaf010920",
+    ("Windows", "ARM64"): "76a441627d5ec42a780a9fedf92d34fd5b7657b630679bbaaa92092eaf010920",
+}
 # Manually maintained archive filename templates for each published
 # miloco-mcp-server build. Usually only SERVER_BINARY_VERSION needs to change;
 # touch this map only if the upstream filename pattern changes again.
@@ -91,6 +100,7 @@ __all__ = [
     "SERVER_RELEASE_BASE",
     "SERVER_BINARY_VERSION",
     "VERIFY_MILOCO_CHECKSUM",
+    "MILOCO_SHA256",
     "MILOCO_DOWNLOAD_FILES",
     "MILOCO_DOWNLOAD_URLS",
     "MCP_DEFAULT_PORT",
