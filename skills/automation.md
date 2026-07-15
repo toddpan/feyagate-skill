@@ -1,7 +1,7 @@
 ---
-name: automation
-description: Automation tools. Schedule tasks, trigger engine, room management, memory/note system, skill management.
-version: 1.2.31
+name: feyagate-automation
+description: Automation tools. Schedule tasks, camera-based trigger rules, dynamic skill management.
+version: 1.3.1
 metadata:
   openclaw:
     requires:
@@ -15,16 +15,24 @@ metadata:
 
 ## Schedule
 
+> Schedule tasks call any other MCP tool at a given time. The `tool_name` must be a registered tool name (e.g. `set_xiaomi_device_property`, `set_tuya_device_property`).
+
 | Tool | Arguments | Returns |
 |------|-----------|---------|
-| `schedule/add` | `name`, `scheduledTime`, `toolName`, `toolArgs`, `repeat`, `repeatDays` (opt) | Task ID |
-| `schedule/list` | — | `tasks[]` |
-| `schedule/get` | `id` | Task detail |
+| `schedule/add` | `name`, `scheduled_time`, `tool_name`, `tool_args`, `repeat` (opt), `repeat_days` (opt) | Task ID |
+| `schedule/list` | `status` (opt) | `tasks[]` |
+| `schedule/get` | `id` (int) | Task detail |
 | `schedule/update` | `id` + fields to update | Update result |
-| `schedule/delete` | `id` | Delete result |
-| `schedule/cancel` | `id` | Cancel result |
+| `schedule/delete` | `id` (int) | Delete result |
+| `schedule/cancel` | `id` (int) | Cancel result (preserves record as `cancelled`) |
 
-**Repeat types:** `none` / `daily` / `weekdays` / `weekends` / `weekly` / `custom_days`
+**Field formats:**
+- `scheduled_time`: ISO 8601 string, e.g. `2026-05-16T23:00:00+08:00`
+- `tool_name`: full MCP tool name with prefix (e.g. `set_xiaomi_device_property`, `xiaomi/camera_snapshot`)
+- `tool_args`: **JSON string** (not object), e.g. `"{\"deviceId\":\"xxx\",\"siid\":2,\"piid\":1,\"value\":false}"`
+- `repeat`: `none` / `daily` / `weekdays` / `weekends` / `weekly` / `custom`
+- `repeat_days`: JSON array string, e.g. `"[1,2,3,4,5]"` (0=Sun, 1=Mon, ..., 6=Sat). Only used when `repeat=custom`.
+- `status` (for `schedule/list`): `pending` / `completed` / `cancelled` (omit to list all)
 
 **Example:**
 ```json
@@ -32,48 +40,73 @@ metadata:
   "name": "schedule/add",
   "arguments": {
     "name": "睡前关灯",
-    "scheduledTime": "2026-05-16T23:00:00+08:00",
-    "toolName": "xiaomi/set_property",
-    "toolArgs": "{\"device_id\":\"xxx\",\"siid\":2,\"piid\":1,\"value\":false}",
+    "scheduled_time": "2026-05-16T23:00:00+08:00",
+    "tool_name": "set_xiaomi_device_property",
+    "tool_args": "{\"deviceId\":\"xxx\",\"siid\":2,\"piid\":1,\"value\":false}",
     "repeat": "daily"
   }
 }
 ```
 
-## Trigger Engine (PC proxy)
+## Trigger Engine
+
+Trigger rules monitor Xiaomi camera frames and auto-execute MCP tool calls when a natural-language condition is detected.
 
 | Tool | Arguments | Returns |
 |------|-----------|---------|
-| `trigger/create` | `name`, `cameras`, `condition`, `actions` | Rule ID |
+| `trigger/create` | `name`, `cameras`, `condition`, `actions` (opt), `notify` (opt), `filter` (opt) | Rule ID |
 | `trigger/list` | — | `rules[]` |
-| `trigger/update` | `id`, fields to update | Update result |
+| `trigger/update` | `id` + fields to update | Update result |
 | `trigger/delete` | `id` | Delete result |
 | `trigger/toggle` | `id`, `enabled` | Toggle result |
-| `trigger/logs` | `limit`, `rule_id` (opt) | `logs[]` |
+| `trigger/logs` | `limit` (opt), `rule_id` (opt) | `logs[]` |
 
-## Room Management
+**Action format** (`trigger.create.actions[]`):
+```json
+{
+  "tool": "set_xiaomi_device_property",
+  "args": { "deviceId": "LIGHT_DID", "siid": 2, "piid": 1, "value": true }
+}
+```
 
-| Tool | Arguments | Returns |
-|------|-----------|---------|
-| `room/list` | — | Unique room name list |
-| `room/set_device` | `device_ids` (string[]), `room_name` (string) | Assignment result |
-
-## Memory System
-
-| Tool | Arguments | Returns |
-|------|-----------|---------|
-| `memory/read` | — | All long-term memories |
-| `memory/add` | `content`, `category` (opt) | Added entry |
-| `memory/update` | `id`, `content` | Update result |
-| `memory/delete` | `id` | Delete result |
-| `memory/search` | `keyword` | Matching entries |
-| `memory/note` | `content` | Add today's note |
-| `memory/today` | — | Today's notes |
+**Example — "有人进门开灯":**
+```json
+{
+  "name": "trigger/create",
+  "arguments": {
+    "name": "玄关感应开灯",
+    "cameras": ["CAMERA_DID"],
+    "condition": "有人进入玄关",
+    "actions": [
+      {
+        "tool": "set_xiaomi_device_property",
+        "args": { "deviceId": "LIGHT_DID", "siid": 2, "piid": 1, "value": true }
+      }
+    ]
+  }
+}
+```
 
 ## Skill System
 
+> Manages the skill set served to the AI agent at runtime. Skills are stored as Markdown files in the `skills/` directory.
+
 | Tool | Arguments | Returns |
 |------|-----------|---------|
-| `skill/list` | — | Available skills |
-| `skill/read` | `id` | Skill content |
-| `skill/manage` | `action` (add/update/delete) + other fields | Manage result |
+| `skill/list` | `source` (opt: `all` / `builtin` / `user`) | Skills with metadata |
+| `skill/read` | `name` | Full skill content (frontmatter + body) |
+| `skill/create` | `name`, `content` | Create result |
+| `skill/update` | `name`, `content` | Update result |
+| `skill/delete` | `name` | Delete result (built-ins cannot be deleted) |
+| `skill/context` | — | Always-on skills context summary |
+| `skill/reload` | — | Re-scan and refresh |
+
+**`skill/create` / `skill/update`:** `content` is the full Markdown file including YAML frontmatter, e.g.:
+```
+---
+name: my_skill
+description: ...
+---
+# My skill
+...
+```

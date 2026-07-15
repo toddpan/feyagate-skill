@@ -1,7 +1,7 @@
 ---
-name: extension
-description: Hardware extension tools. Serial (RS485/UART), GPIO, Xiaozhi AI, license, config, stats.
-version: 1.2.31
+name: feyagate-extension
+description: System-level tools. Xiaozhi AI connection management, vision AI, trigger config, license, statistics, gateway info.
+version: 1.3.1
 metadata:
   openclaw:
     requires:
@@ -13,28 +13,30 @@ metadata:
 
 > **Parent skill:** [SKILL.md](../SKILL.md) — provides cross-platform tools and MCP endpoint config.
 
-## Serial Extension
-
-| Tool | Arguments | Returns |
-|------|-----------|---------|
-| `serial/get_properties` | `device_id`, `siid`, `piids` | Property values |
-| `serial/set_property` | `device_id`, `siid`, `piid`, `value` | Set result |
-| `serial/execute_action` | `device_id`, `siid`, `aiid` | Action result |
-
-## GPIO Extension
-
-| Tool | Arguments | Returns |
-|------|-----------|---------|
-| `gpio/get_properties` | `device_id`, `siid`, `piids` | Property values |
-| `gpio/set_property` | `device_id`, `siid`, `piid`, `value` | Set result |
-| `gpio/execute_action` | `device_id`, `siid`, `aiid` | Action result |
-
 ## Xiaozhi AI Platform
 
+> FeyaGate supports up to N parallel Xiaozhi AI WebSocket connections. The server acts as a WebSocket **client** — it connects *out* to Xiaozhi, not the other way around. All other registered MCP tools are automatically bridged to Xiaozhi clients (except a small exclusion list like `xiaomi/camera_snapshot`, internal config/stats tools, and auth tools).
+
 | Tool | Arguments | Returns |
 |------|-----------|---------|
-| `xiaozhi/status` | — | Connection state |
-| `xiaozhi/set_endpoint` | `endpoint` | Set WebSocket URL |
+| `xiaozhi/status` | — | Connection state for all clients (incl. bridged tool count) |
+| `xiaozhi/list` | — | All configured endpoints with state |
+| `xiaozhi/add` | `endpoint` (string, `ws://` or `wss://`) | New client index |
+| `xiaozhi/remove` | `index` (int) | Remove result |
+| `xiaozhi/set_endpoint` | `endpoint` (opt) | Set/disable the first client (legacy compat) |
+
+**Example — add a Xiaozhi endpoint:**
+```json
+{
+  "name": "xiaozhi/add",
+  "arguments": { "endpoint": "wss://api.xiaozhi.example/mcp" }
+}
+```
+
+**Example — disable (legacy single-endpoint):**
+```json
+{ "name": "xiaozhi/set_endpoint", "arguments": { "endpoint": "" } }
+```
 
 ## System Tools
 
@@ -42,24 +44,30 @@ metadata:
 
 | Tool | Arguments | Returns |
 |------|-----------|---------|
-| `license/status` | — | `edition`, `status`, `guidance` |
-| `license/set` | `license_key`, `product` (opt) | Activation result |
+| `license/status` | — | `edition` (`free`/`pro`), `status`, `guidance` |
+| `license/set` | `license_key` (string, `FG-XXXX-XXXX-XXXX`), `product` (opt) | Activation result |
 | `license/clear` | — | Clear result |
+
+### Gateway Info
+
+| Tool | Arguments | Returns |
+|------|-----------|---------|
+| `gateway/info` | — | Version, platform, device ID, license state |
 
 ### Configuration
 
 | Tool | Arguments | Returns |
 |------|-----------|---------|
-| `config/get_vision` | — | Vision AI settings |
-| `config/set_vision` | `enabled`, `api_key`, `model`, etc. | Update result |
+| `config/get_vision` | — | Vision AI settings (api key masked) |
+| `config/set_vision` | `enabled`, `api_key`, `base_url`, `model`, `temperature`, `max_tokens`, `timeout_seconds` (all opt) | Update result |
 | `config/get_trigger` | — | Trigger engine settings |
-| `config/set_trigger` | `enabled`, `interval_seconds`, etc. | Update result |
+| `config/set_trigger` | `enabled`, `interval_seconds`, `vision_img_count`, `motion_threshold`, `log_ttl_days`, `min_trigger_interval` (all opt) | Update result |
 
 ### Statistics
 
 | Tool | Arguments | Returns |
 |------|-----------|---------|
-| `stats/token_usage` | `days` (opt) | Token usage summary |
-| `stats/token_records` | `limit` (opt) | Recent records |
-| `stats/trigger_summary` | `days` (opt) | Trigger statistics |
-| `stats/dashboard` | — | Full dashboard data |
+| `stats/token_usage` | `days` (opt, default 30) | Token usage summary (daily / by-model / by-source) |
+| `stats/token_records` | `limit` (opt, default 50) | Recent LLM call records |
+| `stats/trigger_summary` | `days` (opt, default 30) | Trigger event aggregates (daily / by-rule / by-camera / heatmap) |
+| `stats/dashboard` | — | Full dashboard summary (system + today) |

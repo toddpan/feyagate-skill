@@ -20,7 +20,7 @@ def mcp_call(host: str, port: int, tool: str, arguments: dict | None = None) -> 
     Args:
         host: MCP server host.
         port: MCP server HTTP port.
-        tool: Tool name (e.g. ``"xiaomi/get_properties"``).
+        tool: Tool name (e.g. ``"device/list"``, ``"set_xiaomi_device_property"``).
         arguments: Tool arguments dict (optional).
 
     Returns:

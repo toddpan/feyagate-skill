@@ -1,7 +1,7 @@
 ---
-name: tuya
-description: Tuya/Smart Life platform tools. QR code auth, device DP property read/write.
-version: 1.2.31
+name: feyagate-tuya
+description: Tuya/Smart Life platform tools. QR code auth, device DP property read/write. Requires license for set operations.
+version: 1.3.1
 metadata:
   openclaw:
     requires:
@@ -11,7 +11,7 @@ metadata:
 
 # Tuya Platform Tools
 
-> **Parent skill:** [SKILL.md](../SKILL.md) — provides cross-platform tools (`device/list`, `device/specs`, `platform/status`) and MCP endpoint config.
+> **Parent skill:** [SKILL.md](../SKILL.md) — provides cross-platform tools (`device/list`, `device/specs`, `auth/platforms`) and MCP endpoint config.
 
 ## Authorization
 
@@ -34,7 +34,7 @@ Open the Smart Life (涂鸦智能) or Tuya app on your phone:
 }
 ```
 
-Returns:
+Returns (the canonical fields):
 ```json
 {
   "success": true,
@@ -85,41 +85,36 @@ Other statuses: `"error"` (not scanned / expired), `"scanned"` (scanned but not 
 | `auth/tuya_logout` | Clear Tuya authorization |
 | `auth/platforms` | Check auth status for all platforms |
 
-### Check Authorization Status
-
-```json
-{
-  "name": "auth/platforms",
-  "arguments": {}
-}
-```
-
-Look for the `tuya` entry to verify `authenticated: true`.
-
 ## Device Control
+
+> **Parameter naming convention:** Tuya device control tools use `deviceId` (camelCase), not `device_id`.
 
 | Tool | Arguments | Returns |
 |------|-----------|---------|
-| `tuya/get_properties` | `device_id`, `codes` (opt) | DP property values |
-| `tuya/set_property` | `device_id`, `code`, `value` | Set result (**requires license**) |
+| `get_tuya_device_properties` | `deviceId` (string) | All DP property values |
+| `set_tuya_device_property` | `deviceId` (string), `code` (string), `value` (any) | Set result (**requires license**) |
 | `tuya/refresh` | — | Refresh device list from cloud |
 
-**Parameter convention:** Tuya tools use `device_id` (snake_case).
-Cross-platform tool `device/specs` uses `deviceId` (camelCase).
+**DP `code` examples** (use `device/specs` to discover available codes per device):
+- `switch_1`, `switch_2` — per-channel on/off (boolean)
+- `bright_value` — brightness (0–1000)
+- `temp_value` — color temperature (0–1000)
+- `work_mode` — mode (string)
+- `colour_data` — HSV color (JSON string)
 
-**Workflow (steps 2-3 use parent skill tools):**
+**Workflow (steps 2–3 use parent skill tools):**
 1. `auth/tuya_qr` → authorize (first time only)
-2. `device/list` with `{"filter": [], "platform": "tuya"}` → list devices
-3. `device/specs` with `{"deviceId": "xxx"}` → get DP definitions (codes)
-4. `tuya/set_property` → control (e.g., `code: "switch_1"`, `value: true`)
+2. `device/list` with `{"platform": "tuya"}` → list devices
+3. `device/specs` with `{"device_id": "xxx"}` → get DP definitions (codes)
+4. `set_tuya_device_property` → control (e.g., `code: "switch_1"`, `value: true`)
 
 ### Device Control Example
 
 ```json
 {
-  "name": "tuya/set_property",
+  "name": "set_tuya_device_property",
   "arguments": {
-    "device_id": "DEVICE_ID",
+    "deviceId": "DEVICE_ID",
     "code": "switch_1",
     "value": true
   }
@@ -128,5 +123,5 @@ Cross-platform tool `device/specs` uses `deviceId` (camelCase).
 
 ## License
 
-`tuya/set_property` requires a license. `tuya/get_properties` works without license.
+`set_tuya_device_property` requires a license. `get_tuya_device_properties` works without license.
 Activate via `license/set` tool.

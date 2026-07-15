@@ -370,7 +370,7 @@ Voice command for indirect device control.
 
 | Tool | Key Arguments |
 |------|---------------|
-| `schedule/add` | `name`, `scheduled_time` (unix), `tool_name`, `tool_args` (JSON string), `repeat` (none/daily/weekly), `repeat_days` |
+| `schedule/add` | `name`, `scheduled_time` (ISO 8601, e.g. `2026-05-16T23:00:00+08:00`), `tool_name`, `tool_args` (JSON string), `repeat` (none/daily/weekdays/weekends/weekly/custom), `repeat_days` (JSON array string, 0=Sun) |
 | `schedule/list` | `status` (opt) |
 | `schedule/get` | `id` |
 | `schedule/update` | `id`, fields to update |
@@ -422,8 +422,11 @@ Voice command for indirect device control.
 
 | Tool | Arguments |
 |------|-----------|
-| `xiaozhi/status` | None |
-| `xiaozhi/set_endpoint` | `endpoint` (ws:// or wss:// URL) |
+| `xiaozhi/status` | None → connection state for all clients |
+| `xiaozhi/list` | None → list configured endpoints |
+| `xiaozhi/add` | `endpoint` (ws:// or wss:// URL) |
+| `xiaozhi/remove` | `index` (int) |
+| `xiaozhi/set_endpoint` | `endpoint` (opt, ws:// or wss:// URL; empty to disable) — legacy single-endpoint |
 
 ---
 

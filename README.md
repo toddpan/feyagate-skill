@@ -19,11 +19,11 @@
 
 ## Features
 
-- **Multi-platform IoT control** — Xiaomi/Mi Home, Tuya, Midea, eWeLink, Serial, GPIO
+- **Multi-platform IoT control** — Xiaomi/Mi Home, Tuya, Midea, eWeLink
 - **Camera P2P streaming** — real-time snapshots, AI vision analysis
 - **Xiao AI speaker** — TTS, music playback, voice commands
-- **Automation** — scheduled tasks, trigger engine, room management
-- **Memory system** — persistent notes and long-term memory for AI agents
+- **Automation** — scheduled tasks, trigger engine
+- **Dynamic skills** — load, create, and hot-reload skill documents at runtime
 - **8 AI agents supported** — Claude Code, Cursor, OpenClaw, Hermes, Codex, Windsurf, Copilot, 小智AI
 
 ## 🚀 Quick Start
@@ -117,13 +117,13 @@ Then **restart your AI assistant** and try: *"List my smart home devices."*
 
 | Category | Tools |
 |:---------|:------|
-| **Device Discovery** | `device/list` `device/specs` `platform/status` `gateway/info` |
-| **Xiaomi** | `xiaomi/get_properties` `xiaomi/set_property` `xiaomi/execute_action` |
+| **Device Discovery** | `device/list` `device/specs` `auth/platforms` `gateway/info` |
+| **Xiaomi** | `get_xiaomi_device_properties` `set_xiaomi_device_property` `execute_xiaomi_device_action` `xiaomi/scene_*` |
 | **Xiao AI Speaker** | `xiaoai/tts` `xiaoai/play_music` `xiaoai/control` |
-| **Camera** | `xiaomi/camera_list` `xiaomi/camera_connect` `xiaomi/camera_snapshot` |
-| **Tuya / Midea / eWeLink** | Platform tools + `auth/*` login helpers |
-| **Scenes / Rooms / Schedule** | `scene/*` `room/*` `schedule/*` `trigger/*` |
-| **Memory** | `memory/read` `memory/add` `memory/search` |
+| **Camera** | `xiaomi/camera_list` `xiaomi/camera_connect` `xiaomi/camera_snapshot` `xiaomi/camera_vision_chat` |
+| **Tuya / Midea / eWeLink** | `get_*_device_properties` `set_*_device_property` + `auth/*` login helpers |
+| **Scenes / Schedule** | `xiaomi/scene_*` `schedule/*` `trigger/*` |
+| **Dynamic Skills** | `skill/list` `skill/read` `skill/create` `skill/update` `skill/delete` `skill/reload` |
 
 > Full API reference: [SKILL.md](SKILL.md) · [FeyaGate_MCP_API.md](FeyaGate_MCP_API.md) · [FeyaGate_HTTP_API.md](FeyaGate_HTTP_API.md)
 
@@ -161,11 +161,11 @@ MIT License
 
 ## 功能特点
 
-- **多平台智能家居** — 小米/米家、涂鸦、美的、易微联、串口、GPIO
+- **多平台智能家居** — 小米/米家、涂鸦、美的、易微联
 - **摄像头** — 实时抓拍、AI 视觉分析
 - **小爱音箱** — 语音播报、放音乐、语音控制
-- **自动化** — 定时任务、触发器、房间管理
-- **记忆** — AI 可记住你的习惯和笔记
+- **自动化** — 定时任务、触发器
+- **动态技能** — 运行时加载、创建、热更新技能文档
 - **支持 8 款 AI 助手** — Cursor、Claude Code、OpenClaw、Codex、Windsurf、Copilot、Hermes、小智AI
 
 ## 🚀 快速开始
@@ -259,13 +259,13 @@ feyagate auth
 
 | 类别 | 工具 |
 |:-----|:-----|
-| **查设备** | `device/list` `device/specs` `platform/status` `gateway/info` |
-| **小米控制** | `xiaomi/get_properties` `xiaomi/set_property` `xiaomi/execute_action` |
+| **查设备** | `device/list` `device/specs` `auth/platforms` `gateway/info` |
+| **小米控制** | `get_xiaomi_device_properties` `set_xiaomi_device_property` `execute_xiaomi_device_action` `xiaomi/scene_*` |
 | **小爱音箱** | `xiaoai/tts` `xiaoai/play_music` `xiaoai/control` |
-| **摄像头** | `xiaomi/camera_list` `xiaomi/camera_connect` `xiaomi/camera_snapshot` |
-| **涂鸦 / 美的 / 易微联** | 各平台控制 + `auth/*` 登录 |
-| **场景 / 房间 / 定时** | `scene/*` `room/*` `schedule/*` `trigger/*` |
-| **记忆** | `memory/read` `memory/add` `memory/search` |
+| **摄像头** | `xiaomi/camera_list` `xiaomi/camera_connect` `xiaomi/camera_snapshot` `xiaomi/camera_vision_chat` |
+| **涂鸦 / 美的 / 易微联** | `get_*_device_properties` `set_*_device_property` + `auth/*` 登录 |
+| **场景 / 定时** | `xiaomi/scene_*` `schedule/*` `trigger/*` |
+| **动态技能** | `skill/list` `skill/read` `skill/create` `skill/update` `skill/delete` `skill/reload` |
 
 > 完整 API 文档：[SKILL.md](SKILL.md) · [FeyaGate_MCP_API.md](FeyaGate_MCP_API.md) · [FeyaGate_HTTP_API.md](FeyaGate_HTTP_API.md)
 

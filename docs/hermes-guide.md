@@ -156,7 +156,7 @@ Hermes 会引导你完成。
 | 你说的话 | Hermes 会做什么 |
 |:---------|:---------------|
 | 列出我的智能设备 | 调用 `device/list` 显示所有设备 |
-| 打开客厅的灯 | 找到设备并调用 `xiaomi/set_property` |
+| 打开客厅的灯 | 找到设备并调用 `set_xiaomi_device_property` |
 | 把空调温度设为 26 度 | 读取设备规格并设置属性 |
 | 用小爱音箱播放音乐 | 调用 `xiaoai/play_music` |
 | 小爱播报"该吃饭了" | 调用 `xiaoai/tts` |

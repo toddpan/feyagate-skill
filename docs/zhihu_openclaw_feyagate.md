@@ -185,7 +185,7 @@ OpenClaw 会调用 `device/list` 工具，返回所有设备的名称、型号�
 
 > 「把客厅灯打开」
 
-OpenClaw 会先调用 `device/specs` 查询设备规格，找到对应的 `siid` 和 `piid`，然后调用 `xiaomi/set_property` 执行操作：
+OpenClaw 会先调用 `device/specs` 查询设备规格，找到对应的 `siid` 和 `piid`，然后调用 `set_xiaomi_device_property` 执行操作：
 
 ```
 已将「客厅灯」打开 ✓
@@ -336,16 +336,16 @@ FeyaGate 提供了 76 个 MCP 工具，覆盖以下类别：
 
 | 类别 | 工具示例 |
 |------|---------|
-| 设备发现 | `device/list`、`device/specs`、`platform/status` |
-| 小米控制 | `xiaomi/get_properties`、`xiaomi/set_property`、`xiaomi/execute_action` |
-| 涂鸦控制 | `tuya/get_property`、`tuya/set_property` |
-| 美的控制 | `midea/get_property`、`midea/set_property` |
-| 易微联控制 | `ewelink/get_property`、`ewelink/set_property` |
+| 设备发现 | `device/list`、`device/specs`、`auth/platforms` |
+| 小米控制 | `get_xiaomi_device_properties`、`set_xiaomi_device_property`、`execute_xiaomi_device_action` |
+| 涂鸦控制 | `get_tuya_device_properties`、`set_tuya_device_property` |
+| 美的控制 | `get_midea_device_properties`、`set_midea_device_property` |
+| 易微联控制 | `get_ewelink_device_properties`、`set_ewelink_device_property` |
 | 小爱音箱 | `xiaoai/tts`、`xiaoai/play_music`、`xiaoai/control` |
 | 摄像头 | `xiaomi/camera_list`、`xiaomi/camera_connect`、`xiaomi/camera_snapshot`、`xiaomi/camera_vision_chat` |
 | 场景 | `xiaomi/scene_list`、`xiaomi/scene_trigger` |
 | 定时 | `schedule/add`、`schedule/list`、`schedule/delete` |
-| 触发器 | `trigger/add`、`trigger/list`（摄像头+自然语言条件） |
+| 触发器 | `trigger/create`、`trigger/list`（摄像头+自然语言条件） |
 | 认证 | `auth/platforms`、`auth/tuya_qr`、`auth/midea_login` |
 | 配置 | `config/get`、`config/set`、`config/set_vision` |
 

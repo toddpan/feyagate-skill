@@ -50,7 +50,7 @@ class TestMcpCall:
     def test_successful_call(self):
         mock_resp = _make_valid_response()
         with patch("feyagate_skill.mcp.urlopen", return_value=mock_resp):
-            result = mcp_call("localhost", 38080, "xiaomi/get_properties", {"device_id": "123"})
+            result = mcp_call("localhost", 38080, "device/list", {"platform": "xiaomi"})
         assert isinstance(result, dict)
         assert "devices" in result
         assert result["devices"] == []
@@ -64,7 +64,7 @@ class TestMcpCall:
 
     def test_connection_refused(self):
         with patch("feyagate_skill.mcp.urlopen", side_effect=URLError("Connection refused")):
-            result = mcp_call("localhost", 38080, "xiaomi/get_properties")
+            result = mcp_call("localhost", 38080, "device/list")
         assert "error" in result
         assert "Connection" in result["error"] or "Network" in result["error"]
 
@@ -74,7 +74,7 @@ class TestMcpCall:
         mock_resp.__enter__ = lambda s: s
         mock_resp.__exit__ = lambda *a: None
         with patch("feyagate_skill.mcp.urlopen", return_value=mock_resp):
-            result = mcp_call("localhost", 38080, "xiaomi/get_properties")
+            result = mcp_call("localhost", 38080, "device/list")
         assert "error" in result
         assert "JSON" in result["error"]
 
@@ -85,19 +85,19 @@ class TestMcpCall:
         mock_resp.__enter__ = lambda s: s
         mock_resp.__exit__ = lambda *a: None
         with patch("feyagate_skill.mcp.urlopen", return_value=mock_resp):
-            result = mcp_call("localhost", 38080, "xiaomi/get_properties")
+            result = mcp_call("localhost", 38080, "device/list")
         assert isinstance(result, dict)
 
     def test_none_arguments(self):
         mock_resp = _make_valid_response()
         with patch("feyagate_skill.mcp.urlopen", return_value=mock_resp):
-            result = mcp_call("localhost", 38080, "xiaomi/get_properties", None)
+            result = mcp_call("localhost", 38080, "device/list", None)
         assert isinstance(result, dict)
 
     def test_empty_arguments(self):
         mock_resp = _make_valid_response()
         with patch("feyagate_skill.mcp.urlopen", return_value=mock_resp):
-            result = mcp_call("localhost", 38080, "xiaomi/get_properties", {})
+            result = mcp_call("localhost", 38080, "device/list", {})
         assert isinstance(result, dict)
 
 

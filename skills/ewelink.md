@@ -1,7 +1,7 @@
 ---
-name: ewelink
-description: eWeLink platform tools. Account/password auth, read/write device properties for Sonoff and eWeLink devices.
-version: 1.2.31
+name: feyagate-ewelink
+description: eWeLink platform tools. Account/password auth, read/write device properties for Sonoff and eWeLink devices. Requires license for set operations.
+version: 1.3.1
 metadata:
   openclaw:
     requires:
@@ -11,7 +11,7 @@ metadata:
 
 # eWeLink Platform Tools
 
-> **Parent skill:** [SKILL.md](../SKILL.md) — provides cross-platform tools (`device/list`, `device/specs`, `platform/status`) and MCP endpoint config.
+> **Parent skill:** [SKILL.md](../SKILL.md) — provides cross-platform tools (`device/list`, `device/specs`, `auth/platforms`) and MCP endpoint config.
 
 ## Authorization
 
@@ -36,7 +36,7 @@ eWeLink uses email/phone and password login.
 |-----------|----------|-------------|
 | `email` | Yes | eWeLink account email or phone number |
 | `password` | Yes | eWeLink account password |
-| `country_code` | No | Country code (e.g., `+86` for China, `+1` for US) |
+| `country_code` | No | Country code (e.g., `+86` for China, `+1` for US). Default `+86` |
 
 Returns on success:
 ```json
@@ -53,9 +53,9 @@ Returns on success:
 }
 ```
 
-Token is valid for 2592000 seconds (30 days). WebSocket connection is established automatically for real-time updates. Re-login when expired.
+After login the server auto-refreshes device list and establishes a WebSocket for real-time updates. Token is valid for 30 days. Re-login when expired.
 
-**Refresh device list after login:**
+**Refresh device list:**
 
 ```json
 {
@@ -68,49 +68,37 @@ Token is valid for 2592000 seconds (30 days). WebSocket connection is establishe
 
 | Tool | Description |
 |------|-------------|
-| `ewelink/refresh` | Refresh device list from cloud |
 | `auth/ewelink_logout` | Clear eWeLink authorization |
-
-### Check Authorization Status
-
-```json
-{
-  "name": "auth/platforms",
-  "arguments": {}
-}
-```
-
-Look for the `ewelink` entry to verify `authenticated: true`.
+| `auth/platforms` | Check auth status for all platforms |
 
 ## Device Control
 
+> **Parameter naming convention:** eWeLink device control tools use `deviceId` (camelCase), not `device_id`.
+
 | Tool | Arguments | Returns |
 |------|-----------|---------|
-| `ewelink/get_properties` | `device_id` | Property values |
-| `ewelink/set_property` | `device_id`, `property`, `value` | Set result (**requires license**) |
-| `ewelink/execute_action` | `device_id`, `action` | Action result (**requires license**) |
+| `get_ewelink_device_properties` | `deviceId` (string) | All property values |
+| `set_ewelink_device_property` | `deviceId` (string), `property` (string), `value` (any) | Set result (**requires license**) |
+| `ewelink/refresh` | — | Refresh device list from cloud |
 
-**Parameter convention:** eWeLink tools use `device_id` (snake_case).
-Cross-platform tool `device/specs` uses `deviceId` (camelCase).
-
-**Property examples:**
+**Common properties** (use `device/specs` to discover per-device names):
 - `switch`: `on` / `off` (single channel)
 - `switches`: JSON array `[{"switch": "on", "outlet": 0}]` (multi-channel)
 
-**Workflow (steps 3-4 use parent skill tools):**
+**Workflow (steps 3–4 use parent skill tools):**
 1. `auth/ewelink_login` → login with email/phone and password
 2. `ewelink/refresh` → refresh device list from cloud
-3. `device/list` with `{"filter": [], "platform": "ewelink"}` → list devices
-4. `device/specs` with `{"deviceId": "xxx"}` → get property definitions
-5. `ewelink/set_property` → control (e.g., `property: "switch"`, `value: "on"`)
+3. `device/list` with `{"platform": "ewelink"}` → list devices
+4. `device/specs` with `{"device_id": "xxx"}` → get property definitions
+5. `set_ewelink_device_property` → control (e.g., `property: "switch"`, `value: "on"`)
 
 ### Device Control Example
 
 ```json
 {
-  "name": "ewelink/set_property",
+  "name": "set_ewelink_device_property",
   "arguments": {
-    "device_id": "DEVICE_ID",
+    "deviceId": "DEVICE_ID",
     "property": "switch",
     "value": "on"
   }
@@ -119,5 +107,5 @@ Cross-platform tool `device/specs` uses `deviceId` (camelCase).
 
 ## License
 
-`ewelink/set_property` and `ewelink/execute_action` require a license. `ewelink/get_properties` works without license.
+`set_ewelink_device_property` requires a license. `get_ewelink_device_properties` works without license.
 Activate via `license/set` tool.

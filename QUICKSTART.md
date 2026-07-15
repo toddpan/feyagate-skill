@@ -156,7 +156,7 @@ curl -s -X POST http://localhost:38080/mcp/http \
 ## Setup Complete
 
 After completing Steps 1-4, the user can control smart home devices through their AI agent.
-The AI agent will automatically use the MCP tools (e.g. `device/list`, `device/specs`, `xiaomi/set_property`).
+The AI agent will automatically use the MCP tools (e.g. `device/list`, `device/specs`, `set_xiaomi_device_property`).
 
 ---
 
@@ -200,49 +200,49 @@ curl -s -X POST http://localhost:38080/mcp/http \
 
 ### Control Xiaomi / MIOT Device
 
-**Control flow:** `device/list` → `device/specs` (get siid/piid/aiid) → `xiaomi/set_property` or `xiaomi/execute_action`
+**Control flow:** `device/list` → `device/specs` (get siid/piid/aiid) → `set_xiaomi_device_property` or `execute_xiaomi_device_action`
 
-> **Parameter naming:** Cross-platform tool `device/specs` uses `deviceId` (camelCase); platform-specific tools use `device_id` (snake_case).
+> **Parameter naming:** Cross-platform tool `device/specs` uses `device_id` (snake_case); Xiaomi device control tools use `deviceId` (camelCase).
 
 ```bash
 # Query device spec
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"device/specs","arguments":{"deviceId":"YOUR_DID"}}}' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"device/specs","arguments":{"device_id":"YOUR_DID"}}}' \
   | python3 -m json.tool
 
 # Read property
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"xiaomi/get_properties","arguments":{"device_id":"YOUR_DID","siid":2,"piids":[1]}}}' \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"get_xiaomi_device_properties","arguments":{"deviceId":"YOUR_DID","siid":2,"piids":[1]}}}' \
   | python3 -m json.tool
 
 # Set property (turn on light)
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"xiaomi/set_property","arguments":{"device_id":"YOUR_DID","siid":2,"piid":1,"value":true}}}' \
+  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"set_xiaomi_device_property","arguments":{"deviceId":"YOUR_DID","siid":2,"piid":1,"value":true}}}' \
   | python3 -m json.tool
 
 # Execute action
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"xiaomi/execute_action","arguments":{"device_id":"YOUR_DID","siid":2,"aiid":1}}}' \
+  -d '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"execute_xiaomi_device_action","arguments":{"deviceId":"YOUR_DID","siid":2,"aiid":1}}}' \
   | python3 -m json.tool
 ```
 
 ### Scenes
 
 ```bash
-# List scenes
+# List Xiaomi scenes
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"scene/list","arguments":{"platform":"xiaomi"}}}' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"xiaomi/scene_list","arguments":{}}}' \
   | python3 -m json.tool
 
 # Trigger scene
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"scene/trigger","arguments":{"platform":"xiaomi","sceneId":"SCENE_ID"}}}' \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"xiaomi/scene_trigger","arguments":{"sceneId":"SCENE_ID"}}}' \
   | python3 -m json.tool
 ```
 
@@ -296,7 +296,7 @@ curl -s -X POST http://localhost:38080/mcp/http \
 | `authorized: false` | `feyagate auth` |
 | `cannot open shared object file` | `feyagate update` or re-run `feyagate setup` |
 | `Tool not found` | Check tool name with `tools/list` |
-| `key 'device_id' not found` | `device/specs` uses `deviceId`; platform tools use `device_id` |
+| `key 'deviceId' not found` | `device/specs` uses `device_id`; Xiaomi platform tools use `deviceId` |
 | `camera_connect` fails | Check camera native libraries in `lib/` |
 | No frame data | Wait 3-5 seconds, check `xiaomi/camera_status` |
 

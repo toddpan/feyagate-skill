@@ -1,7 +1,7 @@
 ---
 name: feyagate
 description: MCP smart home gateway for AI agents. Control Xiaomi, Tuya, Midea, eWeLink, cameras, and XiaoAI speakers via MCP protocol.
-version: 1.2.31
+version: 1.3.1
 emoji: "🏠"
 homepage: https://www.feyagate.com
 metadata:
@@ -12,12 +12,12 @@ metadata:
       config:
         - ~/.feyagate/config/config.yaml
     envVars:
-      - name: FEyagate_INSTALL_DIR
+      - name: FEYAGATE_INSTALL_DIR
         required: false
         description: Override installation directory (default ~/.feyagate)
-      - name: FEyagate_PORT
+      - name: FEYAGATE_PORT
         required: false
-        description: HTTP port for the MCP proxy server (default 38080)
+        description: HTTP port for the MCP server (default 38080)
 sub_skills:
   - name: feyagate-xiaomi
     file: skills/xiaomi.md
@@ -33,15 +33,15 @@ sub_skills:
     trigger: eWeLink, Sonoff, iTEAD, switch, relay
   - name: feyagate-automation
     file: skills/automation.md
-    trigger: schedule, timer, trigger, automation, room, memory, note, 定时, 自动化, 房间, 记忆
+    trigger: schedule, timer, trigger, automation, skill, 定时, 自动化, 技能
   - name: feyagate-extension
     file: skills/extension.md
-    trigger: serial, RS485, UART, GPIO, Xiaozhi, 小智, license, config, stats, 统计
+    trigger: Xiaozhi, 小智, license, config, stats, vision, 统计, 配置, 授权
 ---
 
 # FeyaGate Skill — MCP Smart Home Gateway
 
-Control smart home devices (lights, cameras, AC, speakers) from any AI agent via MCP protocol. Supports **Xiaomi · Tuya · Midea · eWeLink · Serial · GPIO**.
+Control smart home devices (lights, cameras, AC, speakers) from any AI agent via MCP protocol. Supports **Xiaomi · Tuya · Midea · eWeLink**.
 
 ## Prerequisites
 
@@ -94,14 +94,12 @@ These tools work across all platforms (system auto-detects device platform):
 
 | Tool | Arguments | Returns |
 |------|-----------|---------|
-| `device/list` | `filter` (string[]), `platform` (opt) | Devices with `platform` field |
-| `device/specs` | `deviceId` (string) | Platform-specific spec: properties, actions |
-| `platform/status` | — | All platform connection/auth/sync status |
+| `device/list` | `platform` (opt), `filter` (string[]) | All devices (xiaomi/tuya/midea/ewelink) |
+| `device/specs` | `device_id` (string) | Platform-specific spec: properties, actions |
+| `auth/platforms` | — | All platform connection/auth status |
 | `gateway/info` | — | Version, device count, ports |
-| `scene/list` | `platform` (string) | Scene list |
-| `scene/trigger` | `platform`, `sceneId` | Trigger result |
 
-> **Parameter convention:** `device/specs` uses `deviceId` (camelCase); platform-specific tools (`xiaomi/*`, `tuya/*`) use `device_id` (snake_case).
+> **Parameter convention:** `device/specs` uses `device_id` (snake_case); platform-specific setters (`set_xiaomi_device_property`, `set_tuya_device_property`, `set_midea_device_property`, `set_ewelink_device_property`) and getters (`get_xiaomi_device_properties`, `get_tuya_device_properties`, `get_midea_device_properties`, `get_ewelink_device_properties`) use `deviceId` (camelCase).
 
 ## Sub-Skill Loading Strategy
 
@@ -109,12 +107,12 @@ The main skill provides cross-platform tools. Load sub-skills on demand based on
 
 | Sub-Skill | File | When to Load |
 |-----------|------|-------------|
-| **feyagate-xiaomi** | [skills/xiaomi.md](skills/xiaomi.md) | Xiaomi/Mi Home devices, cameras, XiaoAI speakers |
+| **feyagate-xiaomi** | [skills/xiaomi.md](skills/xiaomi.md) | Xiaomi/Mi Home devices, cameras, XiaoAI speakers, scenes |
 | **feyagate-tuya** | [skills/tuya.md](skills/tuya.md) | Tuya/Smart Life devices |
 | **feyagate-midea** | [skills/midea.md](skills/midea.md) | Midea/美的 appliances |
 | **feyagate-ewelink** | [skills/ewelink.md](skills/ewelink.md) | eWeLink/Sonoff devices |
-| **feyagate-automation** | [skills/automation.md](skills/automation.md) | Schedule, triggers, rooms, memory |
-| **feyagate-extension** | [skills/extension.md](skills/extension.md) | Serial, GPIO, Xiaozhi AI, license |
+| **feyagate-automation** | [skills/automation.md](skills/automation.md) | Schedule, triggers, skills |
+| **feyagate-extension** | [skills/extension.md](skills/extension.md) | Xiaozhi AI, vision, license, stats, config |
 
 **Workflow:** `device/list` → `device/specs` → identify platform → load corresponding sub-skill
 
@@ -122,8 +120,8 @@ The main skill provides cross-platform tools. Load sub-skills on demand based on
 
 - **Free**: Xiaomi platform (device control, cameras, XiaoAI, MCP proxy)
 - **Licensed**: All platforms (Xiaomi + Tuya + Midea + eWeLink)
-  - `tuya/set_property`, `midea/set_property`, `ewelink/set_property` return `license_required` on free edition
-  - `get_properties` and read tools work without license
+  - `set_tuya_device_property`, `set_midea_device_property`, `set_ewelink_device_property` require license
+  - `get_*_device_properties` and read tools work without license
 
 ## Configuration
 
@@ -150,8 +148,9 @@ xiaozhi:
 | `command not found: feyagate` | `pip install feyagate-skill` |
 | `FeyaGate not installed` | `feyagate setup` |
 | `connection refused` | `feyagate start` |
-| `authorized: false` | `feyagate auth` or platform auth tool |
-| `Tool not found` | Check `tools/list` output |
+| `authorized: false` | `feyagate auth` or platform auth tool (`xiaomi/auth_url`, `auth/tuya_qr`, `auth/midea_login`, `auth/ewelink_login`) |
+| `Tool not found` | Run `tools/list` and use the exact tool name |
+| `platform_not_authenticated` | Call the platform's auth tool first (see error hint) |
 | `license_required` | Set license via `license/set` tool |
 
 Full API docs: [FeyaGate_MCP_API.md](FeyaGate_MCP_API.md), [FeyaGate_HTTP_API.md](FeyaGate_HTTP_API.md)

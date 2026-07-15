@@ -71,6 +71,10 @@ Agent symlink targets per agent:
 - **mcp.py dual interface**: `mcp_call()` is synchronous (stdlib `urllib`), `async_mcp_call()` uses `aiohttp` (optional dependency). Both target `POST /mcp/http` on the Go binary using JSON-RPC 2.0.
 - **service.py process lifecycle**: managed via a PID file (`miloco-mcp-server.pid`). Start spawns the binary with `subprocess.Popen`, stop sends SIGTERM then SIGKILL after 5s timeout.
 - **installer.py FOTA flow**: fetches `fota.json` → matches platform via `FOTA_TYPE_MAP` → downloads archive → verifies MD5 → extracts binary + libs + webui to `~/.feyagate/`.
+- **Two copies of every SKILL doc must be kept in sync**:
+  - The repo source at `SKILL.md` and `skills/<name>.md` (for repo browsing / source installs).
+  - The package-bundled copy at `feyagate_skill/data/SKILL.md` and `feyagate_skill/data/skills/<name>.md`, which `installer._copy_skill_docs()` copies into `~/.feyagate/` on `feyagate setup`. `_copy_skill_docs()` only writes files that don't already exist at the target — so an upgrade of the Python package will not overwrite an older copy in `~/.feyagate/`. After editing the source SKILL docs, always `cp` them to the `feyagate_skill/data/` mirror before publishing.
+- **MCP tool names and parameter casing differ between tools**: the cross-platform tools (`device/list`, `device/specs`) use `device_id` (snake_case); the platform-specific setters/getters (`get_xiaomi_device_properties`, `set_xiaomi_device_property`, `set_tuya_device_property`, `set_midea_device_property`, `set_ewelink_device_property`, etc.) use `deviceId` (camelCase). The full canonical list lives in `app/miloco-mcp-server/src/mcp/mcp_tools.cpp` — if you change a tool name or schema there, update the corresponding sub-skill in this repo to match.
 
 ## Key constants
 
