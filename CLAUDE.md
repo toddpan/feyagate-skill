@@ -74,7 +74,7 @@ Agent symlink targets per agent:
 - **Two copies of every SKILL doc must be kept in sync**:
   - The repo source at `SKILL.md` and `skills/<name>.md` (for repo browsing / source installs).
   - The package-bundled copy at `feyagate_skill/data/SKILL.md` and `feyagate_skill/data/skills/<name>.md`, which `installer._copy_skill_docs()` copies into `~/.feyagate/` on `feyagate setup`. `_copy_skill_docs()` only writes files that don't already exist at the target — so an upgrade of the Python package will not overwrite an older copy in `~/.feyagate/`. After editing the source SKILL docs, always `cp` them to the `feyagate_skill/data/` mirror before publishing.
-- **MCP tool names and parameter casing differ between tools**: the cross-platform tools (`device/list`, `device/specs`) use `device_id` (snake_case); the platform-specific setters/getters (`get_xiaomi_device_properties`, `set_xiaomi_device_property`, `set_tuya_device_property`, `set_midea_device_property`, `set_ewelink_device_property`, etc.) use `deviceId` (camelCase). The full canonical list lives in `app/miloco-mcp-server/src/mcp/mcp_tools.cpp` — if you change a tool name or schema there, update the corresponding sub-skill in this repo to match.
+- **MCP tool names and parameter casing**: device control tools (`device/specs`, `set_*`, `get_*`, `execute_*`) all use `deviceId` (camelCase); only `xiaoai/*` (tts/control/play_music) uses `device_id` (snake_case). The full canonical list lives in `app/miloco-mcp-server/src/mcp/mcp_tools.cpp` — if you change a tool name or schema there, update the corresponding sub-skill in this repo to match.
 
 ## Key constants
 

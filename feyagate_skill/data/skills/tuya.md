@@ -1,6 +1,6 @@
 ---
 name: feyagate-tuya
-description: Tuya/Smart Life platform tools. QR code auth, device DP property read/write. Requires license for set operations.
+description: Tuya/Smart Life platform tools. QR code auth, device DP property read/write. Set available in free 90-day trial; license required after expiry.
 version: 1.3.1
 metadata:
   openclaw:
@@ -92,7 +92,7 @@ Other statuses: `"error"` (not scanned / expired), `"scanned"` (scanned but not 
 | Tool | Arguments | Returns |
 |------|-----------|---------|
 | `get_tuya_device_properties` | `deviceId` (string) | All DP property values |
-| `set_tuya_device_property` | `deviceId` (string), `code` (string), `value` (any) | Set result (**requires license**) |
+| `set_tuya_device_property` | `deviceId` (string), `code` (string), `value` (any) | Set result (free trial / licensed) |
 | `tuya/refresh` | — | Refresh device list from cloud |
 
 **DP `code` examples** (use `device/specs` to discover available codes per device):
@@ -105,7 +105,7 @@ Other statuses: `"error"` (not scanned / expired), `"scanned"` (scanned but not 
 **Workflow (steps 2–3 use parent skill tools):**
 1. `auth/tuya_qr` → authorize (first time only)
 2. `device/list` with `{"platform": "tuya"}` → list devices
-3. `device/specs` with `{"device_id": "xxx"}` → get DP definitions (codes)
+3. `device/specs` with `{"deviceId": "xxx"}` → get DP definitions (codes)
 4. `set_tuya_device_property` → control (e.g., `code: "switch_1"`, `value: true`)
 
 ### Device Control Example

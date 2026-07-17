@@ -108,7 +108,7 @@ GET /api/v1/gateway/info
     "version": "v1.2.14",
     "platform": "linux",
     "device_id": "xxx",
-    "edition": "pro",
+    "edition": "licensed",
     "licensed": true
   }
 }
@@ -127,7 +127,7 @@ GET /api/v1/gateway/license
 {
   "code": 0,
   "data": {
-    "edition": "pro",
+    "edition": "licensed",
     "status": "active",
     "product": "feyagate-linux",
     "license_key": "FG-xxxx-****-xxxx"
@@ -160,7 +160,7 @@ Content-Type: application/json
 {
   "code": 0,
   "data": {
-    "edition": "pro",
+    "edition": "licensed",
     "status": "active",
     "activated": true
   }
@@ -467,7 +467,7 @@ Content-Type: application/json
     }
   ],
   "count": 1,
-  "max_count": 3
+  "max_count": 10
 }
 ```
 
@@ -514,7 +514,7 @@ Content-Type: application/json
 **响应示例**:
 ```json
 {
-  "edition": "pro",
+  "edition": "licensed",
   "status": "active",
   "product": "feyagate-linux",
   "device_id": "xxx",
@@ -536,7 +536,7 @@ Content-Type: application/json
 **响应示例**:
 ```json
 {
-  "edition": "pro",
+  "edition": "licensed",
   "status": "active",
   "activated": true,
   "message": "授权成功! 全平台功能已解锁。"
@@ -854,7 +854,7 @@ Content-Type: application/json
 
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `device_id` | string | 是 | 设备 ID |
+| `deviceId` | string | 是 | 设备 ID |
 
 ### 12.4 涂鸦平台
 

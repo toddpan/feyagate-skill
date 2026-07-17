@@ -25,7 +25,7 @@ metadata:
 
 **Workflow (steps 1–2 use parent skill tools):**
 1. `device/list` with `{"filter": ["keyword"], "platform": "xiaomi"}` → find target device
-2. `device/specs` with `{"device_id": "xxx"}` → get `siid`/`piid`/`aiid` definitions
+2. `device/specs` with `{"deviceId": "xxx"}` → get `siid`/`piid`/`aiid` definitions
 3. `get_xiaomi_device_properties` → read current values
 4. `set_xiaomi_device_property` → set property value
 

@@ -223,13 +223,13 @@ curl -s -X POST http://localhost:38080/mcp/http \
 ## 4. MCP Tools 总览 (76 个)
 
 > **参数命名规则**:
-> - 跨平台统一工具 (`device/list`, `device/specs`) 使用 `snake_case`（如 `device_id`）
+> - 设备控制工具 (`device/specs`, `set_*`, `get_*`, `execute_*`) 统一使用 `deviceId`（camelCase）；仅 `xiaoai/*`（tts/control/play_music）用 `device_id`（snake_case）
 > - 平台专属工具使用 `camelCase`（如 `deviceId`, `siid`, `piids`）
 
 | # | 工具名 | 类别 | 必填参数 |
 |---|--------|------|----------|
 | 1 | `device/list` | 通用设备 | — |
-| 2 | `device/specs` | 通用设备 | `device_id` |
+| 2 | `device/specs` | 通用设备 | `deviceId` |
 | 3 | `xiaomi/auth_status` | 小米认证 | — |
 | 4 | `xiaomi/auth_url` | 小米认证 | — |
 | 5 | `xiaomi/auth_callback` | 小米认证 | `code` |
@@ -349,7 +349,7 @@ curl -s -X POST http://localhost:38080/mcp/http \
 
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `device_id` | `string` | ✅ | 设备 ID |
+| `deviceId` | `string` | ✅ | 设备 ID |
 
 **响应示例**:
 ```json
@@ -666,7 +666,7 @@ curl -s -X POST http://localhost:38080/mcp/http \
 
 ## 7. 涂鸦 (Tuya) 平台
 
-> 设置设备属性 (`set_tuya_device_property`) 需要设备授权（非免费版）。
+> 设置设备属性 (`set_tuya_device_property`) 需要平台账号授权登录（免费版 90 天试用期内可用，期满需授权版）。
 
 ### 授权（QR 码扫描）
 
@@ -740,7 +740,7 @@ curl -s -X POST http://localhost:38080/mcp/http \
 
 ## 8. 美的 (Midea) 平台
 
-> 设置设备属性 (`set_midea_device_property`) 需要设备授权（非免费版）。
+> 设置设备属性 (`set_midea_device_property`) 需要平台账号授权登录（免费版 90 天试用期内可用，期满需授权版）。
 
 ### 授权（账号密码）
 
@@ -815,7 +815,7 @@ curl -s -X POST http://localhost:38080/mcp/http \
 
 ## 9. 易微联 (eWeLink) 平台
 
-> 设置设备属性 (`set_ewelink_device_property`) 需要设备授权（非免费版）。
+> 设置设备属性 (`set_ewelink_device_property`) 需要平台账号授权登录（免费版 90 天试用期内可用，期满需授权版）。
 
 ### 授权（账号密码）
 
@@ -984,12 +984,12 @@ FeyaGate 支持多个并行小智 AI WebSocket 连接。
 
 **响应示例**:
 ```json
-{
-  "xiaomi": { "connected": true, "authenticated": true },
-  "tuya": { "connected": false, "authenticated": false },
-  "midea": { "connected": true, "authenticated": true },
-  "ewelink": { "connected": false, "authenticated": false }
-}
+[
+  { "platform_id": "xiaomi", "platform_name": "米家", "authenticated": true, "auth_status": { "authorized": true, "cloud_server": "cn", "token_remaining_seconds": 233266 } },
+  { "platform_id": "tuya", "platform_name": "涂鸦", "authenticated": false, "auth_status": { "authenticated": false } },
+  { "platform_id": "midea", "platform_name": "美的", "authenticated": false, "auth_status": { "authenticated": false } },
+  { "platform_id": "ewelink", "platform_name": "易微联", "authenticated": false, "auth_status": { "authenticated": false } }
+]
 ```
 
 ---
@@ -1421,7 +1421,7 @@ FeyaGate 支持多个并行小智 AI WebSocket 连接。
 
 ## 19. 授权码管理
 
-FeyaGate 免费版仅支持米家平台，授权版支持全平台（涂鸦/美的/易微联）。
+FeyaGate 免费版：米家永久可用，涂鸦/美的/易微联各 90 天免费试用（试用期内可用，期满需授权版解锁）；授权版解锁全部平台且无时限，并开启 Vision/Trigger。
 
 | 工具名 | 说明 | 必填参数 |
 |--------|------|----------|
@@ -1434,7 +1434,7 @@ FeyaGate 免费版仅支持米家平台，授权版支持全平台（涂鸦/美�
 **响应示例** (已授权):
 ```json
 {
-  "edition": "pro",
+  "edition": "licensed",
   "status": "active",
   "product": "feyagate-linux",
   "device_id": "xxx",
@@ -1451,10 +1451,10 @@ FeyaGate 免费版仅支持米家平台，授权版支持全平台（涂鸦/美�
   "device_id": "xxx",
   "key_masked": "",
   "guidance": {
-    "message": "当前为免费版，仅支持米家平台。如需使用涂鸦/美的/易微联等平台，请获取授权码。",
+    "message": "当前为免费版：米家永久可用，涂鸦/美的/易微联 90 天免费试用。试用期满或需解锁全部功能请获取授权版。",
     "how_to_authorize": "1. 联系代理商购买授权版虚拟网关\n2. 获取授权码 (格式: FG-XXXX-XXXX-XXXX)\n3. 使用 license/set 工具写入授权码\n4. 系统自动向云端激活",
-    "free_features": "米家平台、设备控制、摄像头、小爱音箱、MCP代理、小智AI",
-    "licensed_features": "以上全部 + 涂鸦平台 + 美的平台 + 易微联平台"
+    "free_features": "米家平台(永久)、涂鸦/美的/易微联(90天试用)、设备控制、摄像头、小爱音箱、MCP代理、小智AI",
+    "licensed_features": "以上全部 + 涂鸦/美的/易微联无时限 + Vision/Trigger"
   }
 }
 ```
@@ -1469,7 +1469,7 @@ FeyaGate 免费版仅支持米家平台，授权版支持全平台（涂鸦/美�
 **响应示例**:
 ```json
 {
-  "edition": "pro",
+  "edition": "licensed",
   "status": "active",
   "activated": true,
   "message": "授权成功! 全平台功能已解锁。"
@@ -1485,7 +1485,7 @@ FeyaGate 免费版仅支持米家平台，授权版支持全平台（涂鸦/美�
 {
   "edition": "free",
   "status": "inactive",
-  "message": "授权已清除，已恢复为免费版 (仅米家平台)。"
+  "message": "授权已清除，已恢复为免费版 (米家永久可用，涂鸦/美的/易微联回到 90 天试用)。"
 }
 ```
 
@@ -1544,7 +1544,7 @@ curl -s -X POST http://localhost:38080/mcp/http \
 # 2. 查询设备规格
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"device/specs","arguments":{"device_id":"YOUR_DID"}}}'
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"device/specs","arguments":{"deviceId":"YOUR_DID"}}}'
 
 # 3. 开灯
 curl -s -X POST http://localhost:38080/mcp/http \

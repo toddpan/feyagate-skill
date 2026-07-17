@@ -95,11 +95,11 @@ These tools work across all platforms (system auto-detects device platform):
 | Tool | Arguments | Returns |
 |------|-----------|---------|
 | `device/list` | `platform` (opt), `filter` (string[]) | All devices (xiaomi/tuya/midea/ewelink) |
-| `device/specs` | `device_id` (string) | Platform-specific spec: properties, actions |
+| `device/specs` | `deviceId` (string) | Platform-specific spec: properties, actions |
 | `auth/platforms` | — | All platform connection/auth status |
 | `gateway/info` | — | Version, device count, ports |
 
-> **Parameter convention:** `device/specs` uses `device_id` (snake_case); platform-specific setters (`set_xiaomi_device_property`, `set_tuya_device_property`, `set_midea_device_property`, `set_ewelink_device_property`) and getters (`get_xiaomi_device_properties`, `get_tuya_device_properties`, `get_midea_device_properties`, `get_ewelink_device_properties`) use `deviceId` (camelCase).
+> **Parameter convention:** All device control tools use `deviceId` (camelCase) — `device/specs`, `set_*`, `get_*`, `execute_*`. Only `xiaoai/*` (tts/control/play_music) uses `device_id` (snake_case).
 
 ## Sub-Skill Loading Strategy
 
@@ -118,9 +118,9 @@ The main skill provides cross-platform tools. Load sub-skills on demand based on
 
 ## License
 
-- **Free**: Xiaomi platform (device control, cameras, XiaoAI, MCP proxy)
-- **Licensed**: All platforms (Xiaomi + Tuya + Midea + eWeLink)
-  - `set_tuya_device_property`, `set_midea_device_property`, `set_ewelink_device_property` require license
+- **Free**: Xiaomi (permanent) + Tuya/Midea/eWeLink (90-day trial each); includes device control, cameras, XiaoAI, MCP proxy, XiaoZhi
+- **Licensed**: All platforms unlimited (no trial expiry) + Vision/Trigger
+  - `set_tuya/midea/ewelink_device_property` work during the 90-day trial (platform account login required); after trial expires, license required
   - `get_*_device_properties` and read tools work without license
 
 ## Configuration

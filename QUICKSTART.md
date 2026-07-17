@@ -202,13 +202,13 @@ curl -s -X POST http://localhost:38080/mcp/http \
 
 **Control flow:** `device/list` → `device/specs` (get siid/piid/aiid) → `set_xiaomi_device_property` or `execute_xiaomi_device_action`
 
-> **Parameter naming:** Cross-platform tool `device/specs` uses `device_id` (snake_case); Xiaomi device control tools use `deviceId` (camelCase).
+> **Parameter naming:** All device control tools (`device/specs`, `set_*`, `get_*`, `execute_*`) use `deviceId` (camelCase); only `xiaoai/*` uses `device_id` (snake_case).
 
 ```bash
 # Query device spec
 curl -s -X POST http://localhost:38080/mcp/http \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"device/specs","arguments":{"device_id":"YOUR_DID"}}}' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"device/specs","arguments":{"deviceId":"YOUR_DID"}}}' \
   | python3 -m json.tool
 
 # Read property
@@ -296,7 +296,7 @@ curl -s -X POST http://localhost:38080/mcp/http \
 | `authorized: false` | `feyagate auth` |
 | `cannot open shared object file` | `feyagate update` or re-run `feyagate setup` |
 | `Tool not found` | Check tool name with `tools/list` |
-| `key 'deviceId' not found` | `device/specs` uses `device_id`; Xiaomi platform tools use `deviceId` |
+| `key 'deviceId' not found` | You passed `device_id` to a tool that requires `deviceId`. All device control tools (`device/specs`, `set_*`, `get_*`, `execute_*`) use camelCase `deviceId`; only `xiaoai/*` uses `device_id` |
 | `camera_connect` fails | Check camera native libraries in `lib/` |
 | No frame data | Wait 3-5 seconds, check `xiaomi/camera_status` |
 

@@ -44,7 +44,7 @@ metadata:
 
 | Tool | Arguments | Returns |
 |------|-----------|---------|
-| `license/status` | — | `edition` (`free`/`pro`), `status`, `guidance` |
+| `license/status` | — | `edition` (`free`/`licensed`), `status`, `guidance` |
 | `license/set` | `license_key` (string, `FG-XXXX-XXXX-XXXX`), `product` (opt) | Activation result |
 | `license/clear` | — | Clear result |
 

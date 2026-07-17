@@ -1,6 +1,6 @@
 ---
 name: feyagate-ewelink
-description: eWeLink platform tools. Account/password auth, read/write device properties for Sonoff and eWeLink devices. Requires license for set operations.
+description: eWeLink platform tools. Account/password auth, read/write device properties for Sonoff and eWeLink devices. Set available in free 90-day trial; license required after expiry.
 version: 1.3.1
 metadata:
   openclaw:
@@ -78,7 +78,7 @@ After login the server auto-refreshes device list and establishes a WebSocket fo
 | Tool | Arguments | Returns |
 |------|-----------|---------|
 | `get_ewelink_device_properties` | `deviceId` (string) | All property values |
-| `set_ewelink_device_property` | `deviceId` (string), `property` (string), `value` (any) | Set result (**requires license**) |
+| `set_ewelink_device_property` | `deviceId` (string), `property` (string), `value` (any) | Set result (free trial / licensed) |
 | `ewelink/refresh` | — | Refresh device list from cloud |
 
 **Common properties** (use `device/specs` to discover per-device names):
@@ -89,7 +89,7 @@ After login the server auto-refreshes device list and establishes a WebSocket fo
 1. `auth/ewelink_login` → login with email/phone and password
 2. `ewelink/refresh` → refresh device list from cloud
 3. `device/list` with `{"platform": "ewelink"}` → list devices
-4. `device/specs` with `{"device_id": "xxx"}` → get property definitions
+4. `device/specs` with `{"deviceId": "xxx"}` → get property definitions
 5. `set_ewelink_device_property` → control (e.g., `property: "switch"`, `value: "on"`)
 
 ### Device Control Example

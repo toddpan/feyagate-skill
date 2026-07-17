@@ -1,6 +1,6 @@
 ---
 name: feyagate-midea
-description: Midea platform tools. Account/password auth, read/write device properties (AC, appliances). Requires license for set operations.
+description: Midea platform tools. Account/password auth, read/write device properties (AC, appliances). Set available in free 90-day trial; license required after expiry.
 version: 1.3.1
 metadata:
   openclaw:
@@ -72,7 +72,7 @@ After login the server auto-refreshes device list. Token validity is returned in
 | Tool | Arguments | Returns |
 |------|-----------|---------|
 | `get_midea_device_properties` | `deviceId` (string) | All property values |
-| `set_midea_device_property` | `deviceId` (string), `property` (string), `value` (any) | Set result (**requires license**) |
+| `set_midea_device_property` | `deviceId` (string), `property` (string), `value` (any) | Set result (free trial / licensed) |
 | `midea/refresh` | — | Refresh device list from cloud |
 
 **Common properties** (use `device/specs` to discover per-device names):
@@ -85,7 +85,7 @@ After login the server auto-refreshes device list. Token validity is returned in
 1. `auth/midea_login` → login with account/password
 2. `midea/refresh` → refresh device list from cloud
 3. `device/list` with `{"platform": "midea"}` → list devices
-4. `device/specs` with `{"device_id": "xxx"}` → get property/action definitions
+4. `device/specs` with `{"deviceId": "xxx"}` → get property/action definitions
 5. `set_midea_device_property` → control (e.g., `property: "power"`, `value: 1`)
 
 ### Device Control Example

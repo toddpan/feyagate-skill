@@ -60,12 +60,12 @@ Unified device list across all platforms (Xiaomi, Tuya, Midea, eWeLink).
 
 ### device/specs
 
-Get device specification (auto-detects platform from device_id).
+Get device specification (auto-detects platform from deviceId).
 
 **Arguments**:
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `device_id` | string | Yes | Device ID |
+| `deviceId` | string | Yes | Device ID |
 
 **Response (Xiaomi)**:
 ```json
@@ -316,7 +316,7 @@ Voice command for indirect device control.
 
 **Arguments**: `deviceId`, `code` (DP code like `switch_1`), `value` → Set DP value.
 
-**Requires license.** Returns `license_required` error on free edition.
+**Free 90-day trial available** (platform login required); license required after trial expiry.
 
 ---
 
@@ -338,7 +338,7 @@ Voice command for indirect device control.
 
 **Arguments**: `deviceId`, `property`, `value`
 
-**Requires license.**
+**Free trial / license required after expiry.**
 
 ---
 
@@ -360,7 +360,7 @@ Voice command for indirect device control.
 
 **Arguments**: `deviceId`, `property`, `value`
 
-**Requires license.**
+**Free trial / license required after expiry.**
 
 ---
 
@@ -502,7 +502,7 @@ License-required errors:
 {
   "success": false,
   "error": "license_required",
-  "message": "涂鸦平台需要设备授权才能使用。未授权设备仅支持米家平台。",
-  "guidance": "请联系代理商获取授权码(格式: FG-XXXX-XXXX-XXXX)，使用 license/set 工具写入后即可使用全平台功能。"
+  "message": "涂鸦平台免费试用已到期。米家仍可永久使用，其他平台需授权版解锁。",
+  "guidance": "请联系代理商获取授权码(格式: FG-XXXX-XXXX-XXXX)，使用 license/set 工具写入后即可解锁全部平台。"
 }
 ```
